@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/domain-LODcloud-builder/static/css/main.2dff37c1.css",
-    "main.js": "/domain-LODcloud-builder/static/js/main.bdc43f99.js",
+    "main.js": "/domain-LODcloud-builder/static/js/main.370bc0a3.js",
     "static/js/239.39407f47.chunk.js": "/domain-LODcloud-builder/static/js/239.39407f47.chunk.js",
     "static/js/977.32484598.chunk.js": "/domain-LODcloud-builder/static/js/977.32484598.chunk.js",
     "static/js/732.04f95125.chunk.js": "/domain-LODcloud-builder/static/js/732.04f95125.chunk.js",
@@ -10,7 +10,7 @@
     "static/media/logo.svg": "/domain-LODcloud-builder/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
     "index.html": "/domain-LODcloud-builder/index.html",
     "main.2dff37c1.css.map": "/domain-LODcloud-builder/static/css/main.2dff37c1.css.map",
-    "main.bdc43f99.js.map": "/domain-LODcloud-builder/static/js/main.bdc43f99.js.map",
+    "main.370bc0a3.js.map": "/domain-LODcloud-builder/static/js/main.370bc0a3.js.map",
     "239.39407f47.chunk.js.map": "/domain-LODcloud-builder/static/js/239.39407f47.chunk.js.map",
     "977.32484598.chunk.js.map": "/domain-LODcloud-builder/static/js/977.32484598.chunk.js.map",
     "732.04f95125.chunk.js.map": "/domain-LODcloud-builder/static/js/732.04f95125.chunk.js.map",
@@ -18,6 +18,6 @@
   },
   "entrypoints": [
     "static/css/main.2dff37c1.css",
-    "static/js/main.bdc43f99.js"
+    "static/js/main.370bc0a3.js"
   ]
 }
