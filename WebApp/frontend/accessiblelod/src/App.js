@@ -10,6 +10,7 @@ import AddDataset from './pages/add_dataset';
 import Search from './pages/search';
 import Dashboard from './pages/dashboard';
 import About from './pages/about';
+import AccessibilityFramework from './pages/accessibility_framework';
 import ReactGA from 'react-ga4'
 const GA_ID = process.env.REACT_APP_GA_ID
 
@@ -32,6 +33,7 @@ function App() {
           <Route path='/search' element={<Search />} />
           {/* <Route path='/dashboard' element={<Dashboard />} /> */}
           <Route path='/about' element={<About />} />
+          <Route path='/accessibility-framework' element={<AccessibilityFramework />} />
           <Route path='*' element={<Cloud />} /> 
         </Routes>
       </HashRouter>

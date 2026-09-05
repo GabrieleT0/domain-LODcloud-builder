@@ -1,11 +1,13 @@
 import React from 'react';
 import { Navbar, Container, Nav, Offcanvas } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaGithub } from 'react-icons/fa';
+import { FaCommentDots } from 'react-icons/fa';
+import { FRAMEWORK_QUESTIONNAIRE_URL } from '../data/framework_questionnaire';
+import './navbar.css';
 
 function NavBar() {
   return (
-    <Navbar bg="light" expand="md" className="mb-4 shadow-sm">
+    <Navbar bg="light" expand="lg" className="mb-4 shadow-sm">
       <Container fluid>
         <Navbar.Brand as={Link} to="/" className="fw-bold fs-4" style={{color:"#46B9B9"}}>
           AccessibleLOD
@@ -32,10 +34,21 @@ function NavBar() {
             <Nav className="me-auto"> {/* horizontal on desktop */}
               <Nav.Link as={Link} to="/">Home</Nav.Link>
               <Nav.Link as={Link} to="/search">Search</Nav.Link>
+              <Nav.Link as={Link} to="/accessibility-framework">Accessibility Framework</Nav.Link>
               {/* <Nav.Link as={Link} to="/add-dataset">Add a Dataset</Nav.Link> */}
               {/* <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link> */}
               <Nav.Link as={Link} to="/about">About</Nav.Link>
             </Nav>
+            <a
+              className="btn navbar-questionnaire-link ms-lg-auto mt-3 mt-lg-0 align-self-lg-center flex-shrink-0"
+              href={FRAMEWORK_QUESTIONNAIRE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaCommentDots aria-hidden="true" focusable="false" size={19} />
+              Share your feedback
+              <span className="visually-hidden"> (opens in a new tab)</span>
+            </a>
              {/*  <button
                     onClick={() => window.open('https://github.com/GabrieleT0/CHe-CLOUD', '_blank')}
                     style={{

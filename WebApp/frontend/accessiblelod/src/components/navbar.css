@@ -1,0 +1,40 @@
+.navbar-questionnaire-link.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1.15rem;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #0f766e, #115e59);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgb(17 94 89 / 25%);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.navbar-questionnaire-link.btn:hover {
+  background: linear-gradient(135deg, #115e59, #134e4a);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgb(17 94 89 / 35%);
+}
+
+.navbar-questionnaire-link.btn:focus-visible {
+  outline: 3px solid #0f766e;
+  outline-offset: 3px;
+  color: #fff;
+}
+
+.navbar-questionnaire-link.btn:active {
+  transform: translateY(0);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar-questionnaire-link.btn,
+  .navbar-questionnaire-link.btn:hover {
+    transition: none;
+    transform: none;
+  }
+}
