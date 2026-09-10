@@ -11,6 +11,8 @@ const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 const fairness_page = 'accessibility_info';
 const khgeartbeatUrl = process.env.KGHEARTBEAT_API
 
+const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const keyMapping = {
   f1M: 'F1-M Unique and persistent ID',
   f1D: 'F1-D URIs dereferenceability',
@@ -78,7 +80,7 @@ router.get('/all_ch_links', async (req, res) => {
             return {
                 "id": item.identifier,
                 "title" : item.title,
-                "url": `${frontendUrl}${fairness_page}?dataset_id=${item.identifier}`,
+                "url": `${frontendUrl}/#/${fairness_page}?dataset_id=${item.identifier}`,
                 "category": matchedKeyword != '' ? matchedKeyword : 'No domain',
             }
         });
@@ -221,13 +223,14 @@ router.get('/search', async (req, res) => {
     let query = {};
 
     if (searchTerm && selectedFields.length > 0) {
+            const escapedSearchTerm = escapeRegex(searchTerm);
       query.$or = selectedFields.map(field => {
         if (field === 'description') {
-          return { 'description.en': { $regex: searchTerm, $options: 'i' } };
+                    return { 'description.en': { $regex: escapedSearchTerm, $options: 'i' } };
         } else if (field === 'keywords') {
-          return { keywords: { $elemMatch: { $regex: searchTerm, $options: 'i' } } };
+                    return { keywords: { $elemMatch: { $regex: escapedSearchTerm, $options: 'i' } } };
         } else {
-          return { [field]: { $regex: searchTerm, $options: 'i' } };
+                    return { [field]: { $regex: escapedSearchTerm, $options: 'i' } };
         }
       });
     }
