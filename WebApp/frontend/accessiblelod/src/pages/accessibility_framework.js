@@ -91,9 +91,7 @@ function AccessibilityFramework() {
                           <td className="framework-table-formula"><ScoringFormula formula={row.scoring} /></td>
                           {hasRequirements && (
                             <td>
-                              <button type="button" className="btn btn-link p-0 text-start" onClick={() => jumpTo(rowId(row.requirement))}>
                                 {row.requirement}
-                              </button>
                             </td>
                           )}
                         </tr>
