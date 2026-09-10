@@ -4,6 +4,13 @@ import { jsPDF } from 'jspdf';
 import 'svg2pdf.js';
 import Footer from './footer';
 
+// Use the current deployment for navigation, including links in exported SVGs.
+const getDatasetUrl = (node) => {
+    const url = new URL(window.location.href);
+    url.hash = `/accessibility_info?dataset_id=${encodeURIComponent(node.id)}`;
+    return url.href;
+};
+
 const StaticGraph = ({ data }) => {
     const [graphRendered, setGraphRendered] = useState(false);
 
@@ -203,7 +210,7 @@ const StaticGraph = ({ data }) => {
                 .text(d => `${d.title || d.id}\nIncoming links: ${incomingLinkCounts[d.id]}`);
                 
             const a = g.append("a")
-                .attr("xlink:href", d => d.url)
+                .attr("xlink:href", getDatasetUrl)
                 .attr("target", "_blank")
                 .style("cursor", "pointer");
                 
@@ -240,7 +247,7 @@ const StaticGraph = ({ data }) => {
                 .text(d => `${d.title || d.id}\nIncoming links: 0`);
                 
             const a = g.append("a")
-                .attr("xlink:href", d => d.url)
+                .attr("xlink:href", getDatasetUrl)
                 .attr("target", "_blank")
                 .style("cursor", "pointer");
                 
