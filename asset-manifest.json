@@ -1,24 +1,24 @@
 {
   "files": {
-    "main.css": "/w/AccessibleLOD-476E/static/css/main.29a156e8.css",
-    "main.js": "/w/AccessibleLOD-476E/static/js/main.edc210d0.js",
-    "static/js/239.39407f47.chunk.js": "/w/AccessibleLOD-476E/static/js/239.39407f47.chunk.js",
-    "static/js/977.32484598.chunk.js": "/w/AccessibleLOD-476E/static/js/977.32484598.chunk.js",
-    "static/js/732.04f95125.chunk.js": "/w/AccessibleLOD-476E/static/js/732.04f95125.chunk.js",
-    "static/js/453.95be9f63.chunk.js": "/w/AccessibleLOD-476E/static/js/453.95be9f63.chunk.js",
-    "static/media/logo_uni.png": "/w/AccessibleLOD-476E/static/media/logo_uni.7d932c6cc1f140603138.png",
-    "static/media/logo.svg": "/w/AccessibleLOD-476E/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
-    "static/media/framework-questionnaire-qr.svg": "/w/AccessibleLOD-476E/static/media/framework-questionnaire-qr.95b13e477d4be27b20cf3fb002c0a968.svg",
-    "index.html": "/w/AccessibleLOD-476E/index.html",
-    "main.29a156e8.css.map": "/w/AccessibleLOD-476E/static/css/main.29a156e8.css.map",
-    "main.edc210d0.js.map": "/w/AccessibleLOD-476E/static/js/main.edc210d0.js.map",
-    "239.39407f47.chunk.js.map": "/w/AccessibleLOD-476E/static/js/239.39407f47.chunk.js.map",
-    "977.32484598.chunk.js.map": "/w/AccessibleLOD-476E/static/js/977.32484598.chunk.js.map",
-    "732.04f95125.chunk.js.map": "/w/AccessibleLOD-476E/static/js/732.04f95125.chunk.js.map",
-    "453.95be9f63.chunk.js.map": "/w/AccessibleLOD-476E/static/js/453.95be9f63.chunk.js.map"
+    "main.css": "./static/css/main.29a156e8.css",
+    "main.js": "./static/js/main.03630c77.js",
+    "static/js/239.39407f47.chunk.js": "./static/js/239.39407f47.chunk.js",
+    "static/js/977.32484598.chunk.js": "./static/js/977.32484598.chunk.js",
+    "static/js/732.04f95125.chunk.js": "./static/js/732.04f95125.chunk.js",
+    "static/js/453.95be9f63.chunk.js": "./static/js/453.95be9f63.chunk.js",
+    "static/media/logo_uni.png": "./static/media/logo_uni.7d932c6cc1f140603138.png",
+    "static/media/logo.svg": "./static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
+    "static/media/framework-questionnaire-qr.svg": "./static/media/framework-questionnaire-qr.95b13e477d4be27b20cf3fb002c0a968.svg",
+    "index.html": "./index.html",
+    "main.29a156e8.css.map": "./static/css/main.29a156e8.css.map",
+    "main.03630c77.js.map": "./static/js/main.03630c77.js.map",
+    "239.39407f47.chunk.js.map": "./static/js/239.39407f47.chunk.js.map",
+    "977.32484598.chunk.js.map": "./static/js/977.32484598.chunk.js.map",
+    "732.04f95125.chunk.js.map": "./static/js/732.04f95125.chunk.js.map",
+    "453.95be9f63.chunk.js.map": "./static/js/453.95be9f63.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.29a156e8.css",
-    "static/js/main.edc210d0.js"
+    "static/js/main.03630c77.js"
   ]
 }
