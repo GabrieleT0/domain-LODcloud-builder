@@ -4895,7 +4895,7 @@
       "No language specified"
     ],
     "image": [
-      75.75757575757575,
+      0,
       "Number of images in the KG: 10000"
     ],
     "human_redeable_labels": [
@@ -4978,14 +4978,14 @@
       0,
       "No data dumps found"
     ],
-    "perceivable_score": 12.626262626262625,
+    "perceivable_score": 0.0,
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.2374498189973445,
     "robust_score": 0.2714285714285714,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 13.551807683355207,
-    "overall_score_with_special": 13.551807683355207,
+    "overall_score_no_special": 0.9255450570925825,
+    "overall_score_with_special": 0.9255450570925825,
     "overall_score_only_special": 0.0
   },
   "bioportal-cdao": {
@@ -37752,7 +37752,7 @@
       "Languages available: ['it', 'en', 'fr', 'ru', 'sk', 'fi', 'de', 'es', 'pl', 'pt', 'ar', 'nl', 'nap', 'hr', 'sv', 'sl', 'cs', 'hu', 'he', 'eu', 'la', 'pms', 'lt', 'lb', 'scn', 'sh', 'ja', 'cy', 'da', 'ro', 'vi', 'eo', 'lv', 'et', 'is', 'el', 'uk', 'sr', 'zh', 'ca']"
     ],
     "image": [
-      94.33962264150944,
+      0,
       "Number of images in the KG: 10000"
     ],
     "human_redeable_labels": [
@@ -37843,14 +37843,14 @@
       0,
       "No data dumps found"
     ],
-    "perceivable_score": 15.723270440251573,
+    "perceivable_score": 0.0,
     "operable_score": 0.25,
     "understandable_score": 0.6705308392766927,
     "robust_score": 0.0,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 16.643801279528265,
-    "overall_score_with_special": 16.643801279528265,
+    "overall_score_no_special": 0.9205308392766927,
+    "overall_score_with_special": 0.9205308392766927,
     "overall_score_only_special": 0.0
   },
   "pleiades": {
@@ -44381,7 +44381,7 @@
       "No language specified"
     ],
     "image": [
-      3.6778227289444647,
+      0,
       "Number of images in the KG: 10000"
     ],
     "human_redeable_labels": [
@@ -44466,14 +44466,14 @@
         "https://semintelligence.github.io/NyOn/OnToology/NyOn.owl/documentation/ontology.rdf"
       ]
     ],
-    "perceivable_score": 0.6129704548240774,
+    "perceivable_score": 0.0,
     "operable_score": 0.6666666666666666,
     "understandable_score": 0.11765765765765764,
     "robust_score": 0.0,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 1.3972947791484016,
-    "overall_score_with_special": 1.3972947791484016,
+    "overall_score_no_special": 0.7843243243243243,
+    "overall_score_with_special": 0.7843243243243243,
     "overall_score_only_special": 0.0
   },
   "RELD": {
@@ -57425,7 +57425,7 @@
       "Languages available: ['de', 'en']"
     ],
     "image": [
-      24.33877551020408,
+      0,
       "Number of images in the KG: 11926"
     ],
     "human_redeable_labels": [
@@ -57537,14 +57537,14 @@
       0,
       "No data dumps found"
     ],
-    "perceivable_score": 4.056462585034013,
+    "perceivable_score": 0.0,
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.7829806011316006,
     "robust_score": 0.25,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 5.506109852832281,
-    "overall_score_with_special": 5.506109852832281,
+    "overall_score_no_special": 1.4496472677982672,
+    "overall_score_with_special": 1.4496472677982672,
     "overall_score_only_special": 0.0
   },
   "bioportal-ep": {
@@ -78693,7 +78693,7 @@
       "Languages available: ['en', 'it']"
     ],
     "image": [
-      162.57575757575756,
+      0,
       "Number of images in the KG: 10730"
     ],
     "human_redeable_labels": [
@@ -78784,14 +78784,14 @@
       0,
       "No data dumps found"
     ],
-    "perceivable_score": 27.095959595959595,
+    "perceivable_score": 0.0,
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.6556,
     "robust_score": 0.25426309378806333,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 28.422489356414324,
-    "overall_score_with_special": 28.422489356414324,
+    "overall_score_no_special": 1.3265297604547301,
+    "overall_score_with_special": 1.3265297604547301,
     "overall_score_only_special": 0.0
   },
   "asjp": {
@@ -126336,7 +126336,7 @@
       "No language specified"
     ],
     "image": [
-      534.625,
+      0,
       "Number of images in the KG: 4277"
     ],
     "human_redeable_labels": [
@@ -126434,14 +126434,14 @@
       0,
       "No data dumps found"
     ],
-    "perceivable_score": 89.10416666666667,
+    "perceivable_score": 0.0,
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.3530588235294118,
     "robust_score": 0.7422480620155039,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 90.61614021887826,
-    "overall_score_with_special": 90.61614021887826,
+    "overall_score_no_special": 1.5119735522115825,
+    "overall_score_with_special": 1.5119735522115825,
     "overall_score_only_special": 0.0
   },
   "jita": {
@@ -140428,7 +140428,7 @@
       "Total video resources found: 0"
     ],
     "alt_image": [
-      59.22330097087378,
+      0,
       "Total number of images recovered: 103"
     ],
     "audio_meta": false,
@@ -140480,11 +140480,11 @@
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.22400000000000003,
     "robust_score": 0.5000652217016082,
-    "accessibility_for_visually_impaired_score": 29.61165048543689,
+    "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
     "overall_score_no_special": 1.1407318883682749,
-    "overall_score_with_special": 30.752382373805165,
-    "overall_score_only_special": 29.61165048543689
+    "overall_score_with_special": 1.1407318883682749,
+    "overall_score_only_special": 0.0
   },
   "biolod-pdb": {
     "title": "BioLOD for Protein Data Bank Japan",
@@ -155859,7 +155859,7 @@
       "Languages available: ['en']"
     ],
     "image": [
-      44812.8,
+      0,
       "Number of images in the KG: 448128"
     ],
     "human_redeable_labels": [
@@ -155944,14 +155944,14 @@
         "https://github.com/SofiBar/IconologyDataset/blob/main/data/icondataset.ttl"
       ]
     ],
-    "perceivable_score": 7468.8,
+    "perceivable_score": 0.0,
     "operable_score": 0.8333333333333334,
     "understandable_score": 0.46439392974636534,
     "robust_score": 0.55,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 7470.64772726308,
-    "overall_score_with_special": 7470.64772726308,
+    "overall_score_no_special": 1.8477272630796988,
+    "overall_score_with_special": 1.8477272630796988,
     "overall_score_only_special": 0.0
   },
   "Previsible": {
@@ -159071,7 +159071,7 @@
       "Languages available: ['en', 'fi', 'sv', 'ru']"
     ],
     "image": [
-      2771.6222222222223,
+      0,
       "Number of images in the KG: 498892"
     ],
     "human_redeable_labels": [
@@ -159156,14 +159156,14 @@
         "https://doi.org/10.5281/zenodo.3431121"
       ]
     ],
-    "perceivable_score": 461.93703703703704,
+    "perceivable_score": 0.0,
     "operable_score": 0.5,
     "understandable_score": 0.5496323192012198,
     "robust_score": 0.25,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 463.2366693562383,
-    "overall_score_with_special": 463.2366693562383,
+    "overall_score_no_special": 1.2996323192012198,
+    "overall_score_with_special": 1.2996323192012198,
     "overall_score_only_special": 0.0
   },
   "bioportal-so_x1": {
@@ -160269,7 +160269,7 @@
       "Languages available: ['it', 'en', 'fr', 'ru', 'sk', 'fi', 'de', 'es', 'pl', 'pt', 'ar', 'nl', 'nap', 'hr', 'sv', 'sl', 'cs', 'hu', 'he', 'eu', 'la', 'pms', 'lt', 'lb', 'scn', 'sh', 'ja', 'cy', 'da', 'ro', 'vi', 'eo', 'lv', 'et', 'is', 'el', 'uk', 'sr', 'zh', 'ca']"
     ],
     "image": [
-      94.33962264150944,
+      0,
       "Number of images in the KG: 10000"
     ],
     "human_redeable_labels": [
@@ -160360,14 +160360,14 @@
       0,
       "No data dumps found"
     ],
-    "perceivable_score": 15.723270440251573,
+    "perceivable_score": 0.0,
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.6646150820414356,
     "robust_score": 0.22916666666666666,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 17.033718855626343,
-    "overall_score_with_special": 17.033718855626343,
+    "overall_score_no_special": 1.310448415374769,
+    "overall_score_with_special": 1.310448415374769,
     "overall_score_only_special": 0.0
   },
   "omwn-ell": {
@@ -163816,7 +163816,7 @@
       "Total video resources found: 0"
     ],
     "alt_image": [
-      59.22330097087378,
+      0,
       "Total number of images recovered: 103"
     ],
     "audio_meta": false,
@@ -163868,11 +163868,11 @@
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.22400000000000003,
     "robust_score": 0.5000652217016082,
-    "accessibility_for_visually_impaired_score": 29.61165048543689,
+    "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
     "overall_score_no_special": 1.1407318883682749,
-    "overall_score_with_special": 30.752382373805165,
-    "overall_score_only_special": 29.61165048543689
+    "overall_score_with_special": 1.1407318883682749,
+    "overall_score_only_special": 0.0
   },
   "universal-dependencies-treebank-estonian": {
     "title": "Universal Dependencies Treebank Estonian",
@@ -166781,7 +166781,7 @@
       "No language specified"
     ],
     "image": [
-      534.625,
+      0,
       "Number of images in the KG: 4277"
     ],
     "human_redeable_labels": [
@@ -166886,14 +166886,14 @@
       0,
       "No data dumps found"
     ],
-    "perceivable_score": 89.10416666666667,
+    "perceivable_score": 0.0,
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.41600000000000004,
     "robust_score": 0.7422480620155039,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 90.67908139534885,
-    "overall_score_with_special": 90.67908139534885,
+    "overall_score_no_special": 1.5749147286821705,
+    "overall_score_with_special": 1.5749147286821705,
     "overall_score_only_special": 0.0
   },
   "clld-afbo": {
@@ -214164,7 +214164,7 @@
       "No language specified"
     ],
     "image": [
-      92.5925925925926,
+      0,
       "Number of images in the KG: 10000"
     ],
     "human_redeable_labels": [
@@ -214251,14 +214251,14 @@
       0,
       "No data dumps found"
     ],
-    "perceivable_score": 15.4320987654321,
+    "perceivable_score": 0.0,
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.34064676616915424,
     "robust_score": 0.253125,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 16.44253719826792,
-    "overall_score_with_special": 16.44253719826792,
+    "overall_score_no_special": 1.010438432835821,
+    "overall_score_with_special": 1.010438432835821,
     "overall_score_only_special": 0.0
   },
   "twc-data-gov": {
@@ -217700,7 +217700,7 @@
       "Total video resources found: 0"
     ],
     "alt_image": [
-      59.22330097087378,
+      0,
       "Total number of images recovered: 103"
     ],
     "audio_meta": false,
@@ -217752,11 +217752,11 @@
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.18184946236559138,
     "robust_score": 0.5000652217016082,
-    "accessibility_for_visually_impaired_score": 29.61165048543689,
+    "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
     "overall_score_no_special": 1.0985813507338662,
-    "overall_score_with_special": 30.710231836170756,
-    "overall_score_only_special": 29.61165048543689
+    "overall_score_with_special": 1.0985813507338662,
+    "overall_score_only_special": 0.0
   },
   "SCBG-Data": {
     "title": "SCBG Data",
@@ -219082,7 +219082,7 @@
       "Languages available: ['en', 'it']"
     ],
     "image": [
-      162.57575757575756,
+      0,
       "Number of images in the KG: 10730"
     ],
     "human_redeable_labels": [
@@ -219169,14 +219169,14 @@
       0,
       "No data dumps found"
     ],
-    "perceivable_score": 27.095959595959595,
+    "perceivable_score": 0.0,
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.658,
     "robust_score": 0.25426309378806333,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 28.424889356414326,
-    "overall_score_with_special": 28.424889356414326,
+    "overall_score_no_special": 1.3289297604547299,
+    "overall_score_with_special": 1.3289297604547299,
     "overall_score_only_special": 0.0
   },
   "tharawat-magazine-com": {
@@ -219382,7 +219382,7 @@
       "No language specified"
     ],
     "image": [
-      2.150933214457492,
+      0,
       "Number of images in the KG: 183352"
     ],
     "human_redeable_labels": [
@@ -219432,7 +219432,7 @@
       "Number of videos: 0"
     ],
     "alt_image": [
-      21.938675334874993,
+      0,
       "Total number of images recovered: 183352"
     ],
     "audio_meta": [
@@ -219483,15 +219483,15 @@
       0,
       "No data dumps found"
     ],
-    "perceivable_score": 0.35848886907624866,
+    "perceivable_score": 0.0,
     "operable_score": 0.16666666666666666,
     "understandable_score": 0.5725949234269395,
     "robust_score": 0.25,
-    "accessibility_for_visually_impaired_score": 10.969337667437497,
+    "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 1.3477504591698548,
-    "overall_score_with_special": 12.317088126607352,
-    "overall_score_only_special": 10.969337667437497
+    "overall_score_no_special": 0.9892615900936061,
+    "overall_score_with_special": 0.9892615900936061,
+    "overall_score_only_special": 0.0
   },
   "umthes": {
     "title": "German environmental thesaurus UMTHES",
@@ -224220,7 +224220,7 @@
       "Total video resources found: 0"
     ],
     "alt_image": [
-      59.22330097087378,
+      0,
       "Total number of images recovered: 103"
     ],
     "audio_meta": false,
@@ -224272,11 +224272,11 @@
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.20087705456936228,
     "robust_score": 0.5000652217016082,
-    "accessibility_for_visually_impaired_score": 29.61165048543689,
+    "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
     "overall_score_no_special": 1.117608942937637,
-    "overall_score_with_special": 30.729259428374526,
-    "overall_score_only_special": 29.61165048543689
+    "overall_score_with_special": 1.117608942937637,
+    "overall_score_only_special": 0.0
   },
   "bioportal-lipro": {
     "title": "Lipid Ontology",
@@ -226101,7 +226101,7 @@
       "No language specified"
     ],
     "image": [
-      92.5925925925926,
+      0,
       "Number of images in the KG: 10000"
     ],
     "human_redeable_labels": [
@@ -226188,14 +226188,14 @@
       0,
       "No data dumps found"
     ],
-    "perceivable_score": 15.4320987654321,
+    "perceivable_score": 0.0,
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.37037766830870283,
     "robust_score": 0.253125,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 16.47226810040747,
-    "overall_score_with_special": 16.47226810040747,
+    "overall_score_no_special": 1.0401693349753696,
+    "overall_score_with_special": 1.0401693349753696,
     "overall_score_only_special": 0.0
   },
   "bioportal-omrse": {
@@ -237523,7 +237523,7 @@
       "No language specified"
     ],
     "image": [
-      4.436130632492765,
+      0,
       "Number of images in the KG: 10731"
     ],
     "human_redeable_labels": [
@@ -237610,14 +237610,14 @@
       0,
       "No data dumps found"
     ],
-    "perceivable_score": 0.7393551054154609,
+    "perceivable_score": 0.0,
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.5165981088152184,
     "robust_score": 0.28125,
     "accessibility_for_visually_impaired_score": 0.004659398005777654,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 1.9538698808973458,
-    "overall_score_with_special": 1.9585292789031234,
+    "overall_score_no_special": 1.214514775481885,
+    "overall_score_with_special": 1.2191741734876627,
     "overall_score_only_special": 0.004659398005777654
   },
   "ckan": {
@@ -239671,7 +239671,7 @@
       "Total video resources found: 0"
     ],
     "alt_image": [
-      59.22330097087378,
+      0,
       "Total number of images recovered: 103"
     ],
     "audio_meta": false,
@@ -239723,11 +239723,11 @@
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.22400000000000003,
     "robust_score": 0.5000652217016082,
-    "accessibility_for_visually_impaired_score": 29.61165048543689,
+    "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
     "overall_score_no_special": 1.1407318883682749,
-    "overall_score_with_special": 30.752382373805165,
-    "overall_score_only_special": 29.61165048543689
+    "overall_score_with_special": 1.1407318883682749,
+    "overall_score_only_special": 0.0
   },
   "oceandrilling-dbseabed": {
     "title": "Ocean Drilling - dbSEABED",
@@ -245543,7 +245543,7 @@
       "No language specified"
     ],
     "image": [
-      4.9504950495049505,
+      0,
       "Number of images in the KG: 10000"
     ],
     "human_redeable_labels": [
@@ -245624,14 +245624,14 @@
         "http://downloads.dbpedia.org/"
       ]
     ],
-    "perceivable_score": 0.8253300330033003,
+    "perceivable_score": 0.00024752475247524753,
     "operable_score": 0.6666666666666666,
     "understandable_score": 0.15598666666666666,
     "robust_score": 0.25,
     "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
-    "overall_score_no_special": 1.8979833663366337,
-    "overall_score_with_special": 1.8979833663366337,
+    "overall_score_no_special": 1.0729008580858084,
+    "overall_score_with_special": 1.0729008580858084,
     "overall_score_only_special": 0.0
   },
   "file:C:UsersaDesktopurn_webprotege_ontology_c0b8701e-374c-4d5a-bc60-970f0cba1976.owl": {
@@ -253725,7 +253725,7 @@
       "Total video resources found: 0"
     ],
     "alt_image": [
-      59.22330097087378,
+      0,
       "Total number of images recovered: 103"
     ],
     "audio_meta": false,
@@ -253777,11 +253777,11 @@
     "operable_score": 0.4166666666666667,
     "understandable_score": 0.22400000000000003,
     "robust_score": 0.5000652217016082,
-    "accessibility_for_visually_impaired_score": 29.61165048543689,
+    "accessibility_for_visually_impaired_score": 0.0,
     "accessibility_for_deaf_hearing_score": 0.0,
     "overall_score_no_special": 1.1407318883682749,
-    "overall_score_with_special": 30.752382373805165,
-    "overall_score_only_special": 29.61165048543689
+    "overall_score_with_special": 1.1407318883682749,
+    "overall_score_only_special": 0.0
   },
   "ipbes": {
     "title": "IPBES Assessments Ontology",
