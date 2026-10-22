@@ -9,7 +9,7 @@ if (fs.existsSync(source)) {
     const scores = Object.fromEntries(csvParse(fs.readFileSync(source, 'utf8')).map(row => {
         const value = row.overall_score_with_special?.trim();
         const score = value ? Number(value) : NaN;
-        return [row.KG, Number.isFinite(score) ? score : null];
+        return [row.KG_ID || row.KG, Number.isFinite(score) ? score : null];
     }));
     fs.writeFileSync(destination, `${JSON.stringify(scores)}\n`);
     console.log(`Synced ${Object.keys(scores).length} cloud scores from ${fileURLToPath(source)}`);

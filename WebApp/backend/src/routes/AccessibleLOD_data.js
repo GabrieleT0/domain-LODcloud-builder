@@ -52,7 +52,7 @@ function getAccessibilityScores() {
         parser.on('data', row => {
             const value = row.overall_score_with_special;
             const score = value == null || value.trim() === '' ? NaN : Number(value);
-            scores.set(row.KG, Number.isFinite(score) ? score : null);
+            scores.set(row.KG_ID || row.KG, Number.isFinite(score) ? score : null);
         });
         parser.on('end', () => resolve(scores));
         input.pipe(parser);
@@ -155,16 +155,21 @@ router.get('/accessibility_data/:id', async (req, res) => {
         const csvPath = path.join(__dirname, '../../data/accessibleLOD_scores.csv'); 
         const targetId = req.params.id;
         let found = false;
-        fs.createReadStream(csvPath)
+        const input = fs.createReadStream(csvPath);
+        input.on('error', (err) => {
+            console.error(err);
+            if (!res.headersSent) res.status(500).json({ error: 'Error reading CSV file' });
+        });
+        input
             .pipe(csv())
             .on('data', (row) => {
-            if (row['KG'] === targetId) {
+            if (!found && (row.KG_ID || row.KG) === targetId) {
                 found = true;
                 res.json(row);
             }
             })
             .on('end', () => {
-            if (!found) {
+            if (!found && !res.headersSent) {
                 res.status(404).json({ message: 'Row not found' });
             }
             })

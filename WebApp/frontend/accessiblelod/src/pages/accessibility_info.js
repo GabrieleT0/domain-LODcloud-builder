@@ -7,8 +7,8 @@ import GaugeChart from '../components/gauge_chart';
 import { Row, Col, Table } from 'react-bootstrap';
 import Footer from '../components/footer';
 import Navbar from '../components/navbar';
-
-
+import { accessibilityTables } from '../data/accessibility_tables';
+import { getAccessibilityMetrics } from '../data/accessibility_metrics';
 
 export const scoreNumber = value => {
     if (value == null || String(value).trim() === '') return null;
@@ -72,13 +72,6 @@ function FairnessInfo(){
     ));
     const radarReady = f_values.some(value => value != null);
 
-    // Accessibility data formatting and categorization
-    const formatLabel = (key) => {
-        return key
-            .replace(/_/g, ' ')
-            .replace(/\b\w/g, char => char.toUpperCase());
-    };
-
     const getScoreColor = (value) => {
         const numValue = parseFloat(value);
         if (isNaN(numValue) || value === '' || value === null) return 'text-muted';
@@ -95,17 +88,6 @@ function FairnessInfo(){
         return 'warning';
     };
 
-    const metricGroups = {
-        'Perceivable': ['audio', 'audio_meta', 'image', 'image_metadata', 'video', 'video_meta', 'assistive_technologies'],
-        'Operable': ['open_license', 'contact_point', 'dump_size', 'check_authentication', 'common_format_availability', 'alternative_access_point', 'sparql_availability_evaluator'],
-        'Understandable': ['description_readability', 'human_redeable_labels', 'data_lang', 'metadata_lang', 'example'],
-        'Robust': ['canonical_citation', 'metadata_broken_links_rate', 'version', 'webpage_status'],
-        'Accessibility for Visually Impaired': ['alt_image', 'audio_description_ratio'],
-        'Accessibility for Deaf or Hard-of-hearing Users': ['video_description_ratio', 'video_sign_language_ratio', 'audio_sign_language_ratio', 'video_subtitle_ratio', 'audio_subtitle_ratio'],
-    };
-    const metricCategories = Object.fromEntries(Object.entries(metricGroups).flatMap(([category, keys]) => keys.map(key => [key, category])));
-    const displayKeys = Object.keys(metricCategories);
-
     const renderValue = (value) => {
         if (value === '' || value === null || value === undefined) {
             return <span className="text-muted fst-italic">N/A</span>;
@@ -117,21 +99,14 @@ function FairnessInfo(){
         return <span>{value}</span>;
     };
 
-    const accessibilityMetrics = Object.entries(fairness_data)
-        .filter(([key]) => displayKeys.includes(key))
-        .map(([key, value]) => ({
-            key,
-            label: formatLabel(key),
-            value: typeof value === 'string' ? value.replace(',', '.') : value,
-            category: metricCategories[key]
-        }))
+    const accessibilityMetrics = getAccessibilityMetrics(fairness_data)
         .filter(metric => {
             const matchesSearch = metric.label.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesCategory = categoryFilter === 'all' || metric.category === categoryFilter;
             return matchesSearch && matchesCategory;
         });
 
-    const categories = ['all','Perceivable', 'Operable', 'Understandable', 'Robust', 'Accessibility for Visually Impaired', 'Accessibility for Deaf or Hard-of-hearing Users'];
+    const categories = ['all', ...accessibilityTables.flatMap(table => table.groups.map(group => group.name))];
 
     return (
         <>
@@ -238,7 +213,7 @@ function FairnessInfo(){
                     {overallScore != null && <Col md={6} sm={12}>
                         <div className="card shadow-sm p-3">
                         <h5 className="card-title text-center">Accessibility</h5>
-                        <GaugeChart label="Overall accessibility score" value={overallScore} />
+                        <GaugeChart label="Overall Score" value={overallScore} />
                         </div>
                     </Col>}
 
@@ -311,7 +286,7 @@ function FairnessInfo(){
                             </thead>
                             <tbody>
                                 {accessibilityMetrics.length > 0 ? (
-                                    accessibilityMetrics.map((metric, index) => (
+                                    accessibilityMetrics.map((metric) => (
                                         <tr key={metric.key} className="hover-highlight">
                                             <td>
                                                 <strong>{metric.label}</strong>
@@ -323,7 +298,7 @@ function FairnessInfo(){
                                                     metric.category === 'Operable' ? 'primary' :
                                                     metric.category === 'Understandable' ? 'teal' :
                                                     metric.category === 'Robust' ? 'indigo' :
-                                                    metric.category === 'Accessibility for Visually Impaired' ? 'orange' :
+                                                    metric.category === 'Accessibility for Blind or Visually Impaired Users' ? 'orange' :
                                                     metric.category === 'Accessibility for Deaf or Hard-of-hearing Users' ? 'pink' :
                                                     metric.category === 'Overall Scores' ? 'purple' :
                                                     'secondary'
@@ -349,7 +324,7 @@ function FairnessInfo(){
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="5" className="text-center text-muted py-4">
+                                        <td colSpan="4" className="text-center text-muted py-4">
                                             No metrics found matching your criteria
                                         </td>
                                     </tr>

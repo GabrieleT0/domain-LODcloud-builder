@@ -90,7 +90,7 @@ def main():
     # File paths and URL
     csv_file = '../data/accessiblelod.csv'  # Your CSV file
     json_url = 'https://lod-cloud.net/versions/latest/lod-data.json'  # Replace with actual URL
-    output_file = 'AccessibleLOD_data.json'  # Output JSON file
+    output_file = '../data/AccessibleLOD_data.json'  # Output JSON file
     
     # Read KG IDs from CSV
     print(f"Reading KG IDs from {csv_file}...")
