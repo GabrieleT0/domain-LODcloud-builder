@@ -11,7 +11,7 @@ cd "$PROJECT_ROOT" || exit 1
 cd "$PROJECT_ROOT/AccessibleLOD_generator" || exit 1
 source venv/bin/activate
 cd "$PROJECT_ROOT/AccessibleLOD_generator/src" || exit 1
-#python3 evaluate_datasets.py
+python3 updated_cloud.py
 
 # Run the cleanup and import script
 cd "$PROJECT_ROOT/WebApp/backend" || exit 1
