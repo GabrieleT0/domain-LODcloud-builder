@@ -1,4 +1,3 @@
-import { lab } from 'd3';
 import React from 'react';
 import ReactApexChart from 'react-apexcharts';
 
@@ -55,7 +54,7 @@ function GaugeChart({ label, value, color = '#008FFB', height = 350 }) {
           },
           value: {
             formatter: function(val) {
-              return parseFloat(val).toFixed(2);
+              return (Number(val) / 100).toFixed(3);
             },
             color: '#111',
             fontSize: '36px',
@@ -83,7 +82,7 @@ function GaugeChart({ label, value, color = '#008FFB', height = 350 }) {
     labels: [label],
   
   };
-  const series = [ value ];
+  const series = [ Math.max(0, Math.min(1, value)) * 100 ];
   return (
       <ReactApexChart options={options} series={series} type="radialBar" height={height} />
   );

@@ -1,623 +1,233 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { jsPDF } from 'jspdf';
-import 'svg2pdf.js';
 import Footer from './footer';
+import { scoreColor } from './graphLayout';
+import { useGraphLayout } from './useGraphLayout';
+import './Graph.css';
+import { fitNodeLabel } from './graphLabels';
 
-// Use the current deployment for navigation, including links in exported SVGs.
-const getDatasetUrl = (node) => {
+const getDatasetUrl = node => {
     const url = new URL(window.location.href);
     url.hash = `/accessibility_info?dataset_id=${encodeURIComponent(node.id)}`;
     return url.href;
 };
 
-const StaticGraph = ({ data }) => {
-    const [graphRendered, setGraphRendered] = useState(false);
+function Graph({ data, loading = false, error = null }) {
+    const svgRef = useRef(null);
+    const zoomRef = useRef(null);
+    const [view, setView] = useState('connected');
+    const [exportError, setExportError] = useState('');
+    const [exporting, setExporting] = useState(false);
+    const gradientId = `score-${useId().replace(/:/g, '')}`;
+    const { layout, layoutLoading, layoutError } = useGraphLayout(data);
+    const activeView = layout.connectedCount ? view : 'isolated';
+    const fitView = nextView => {
+        setView(nextView);
+        if (zoomRef.current) d3.select(svgRef.current).call(zoomRef.current.transform, d3.zoomIdentity);
+    };
 
     useEffect(() => {
-        if (data.nodes.length === 0 || data.links.length === 0 || graphRendered) return;
-        
-        // Render the graph once without animation
-        renderStaticGraph();
-        setGraphRendered(true);
-    }, [data, graphRendered]);
-
-    const renderStaticGraph = () => {
-        const svgElement = document.getElementById("graph");
-        const width = svgElement.clientWidth;
-        const height = svgElement.clientHeight;
-        const svg = d3.select("#graph");
-        const categories = Array.from(new Set(data.nodes.map(node => node.category)));
-        const categoryColors = {
-            "No domain" : "#565151ff",
-            "Government" : "#f6b33c",
-            "Cross Domain" : "#c8a788",
-            "Life Sciences" : "#db777f",
-            "Publications" : "#BCB582",
-            "Geography" : "#29c9cc",
-            "User Generated" : "#d84d8c",
-            "Linguistics" : "#36bc8d",
-            "Social Networking" : "#b5b5b5",
-            "Media" : "#6372C7"
+        const svg = d3.select(svgRef.current);
+        svg.selectAll('*').remove();
+        if (!layout.nodes.length) return;
+        const bounds = layout.connectedBounds;
+        svg.attr('viewBox', `${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}`);
+        const layer = svg.append('g').attr('class', 'cloud-content');
+        const zoom = d3.zoom().scaleExtent([0.5, 12]).on('zoom', event => layer.attr('transform', event.transform));
+        svg.call(zoom).on('dblclick.zoom', null).call(zoom.transform, d3.zoomIdentity);
+        zoomRef.current = zoom;
+        if (layout.isolatedCount) {
+            layer.append('line').attr('data-cloud-section', 'isolated')
+                .attr('x1', 30).attr('x2', layout.width - 30)
+                .attr('y1', layout.dividerY).attr('y2', layout.dividerY)
+                .attr('stroke', '#94a3b8').attr('stroke-dasharray', '6 6');
+            layer.append('text').attr('data-cloud-section', 'isolated')
+                .attr('x', layout.width / 2).attr('y', layout.dividerY + 33)
+                .attr('text-anchor', 'middle').attr('fill', '#475569').attr('font-size', 18)
+                .text(`Isolated datasets (${layout.isolatedCount})`);
+        }
+        // One SVG path replaces thousands of individual link elements.
+        const linkPath = link => `M${link.source.x},${link.source.y}L${link.target.x},${link.target.y}`;
+        const linkLayer = layer.append('g').attr('data-cloud-section', 'connected').attr('fill', 'none');
+        const links = linkLayer.append('path').attr('class', 'cloud-links')
+            .attr('d', layout.links.map(linkPath).join(''))
+            .attr('stroke', '#64748b').attr('stroke-width', 0.8).attr('stroke-opacity', 0.08);
+        const highlightedLinks = linkLayer.append('path').attr('class', 'cloud-highlight')
+            .attr('stroke', '#f97316').attr('stroke-width', 0.8).attr('stroke-opacity', 0.85)
+            .attr('pointer-events', 'none');
+        const groups = layer.append('g').selectAll('a').data(layout.nodes).join('a')
+            .attr('data-cloud-section', node => node.isolated ? 'isolated' : 'connected')
+            .attr('href', getDatasetUrl).attr('target', '_blank').attr('rel', 'noopener noreferrer')
+            .attr('transform', node => `translate(${node.x},${node.y})`)
+            .attr('aria-label', node => `${node.title || node.id}. Accessibility: ${node.score == null ? 'not available' : node.score.toFixed(3)}. Incoming links: ${node.incoming}. Open dataset.`);
+        groups.append('title').text(node => `${node.title || node.id}\nDomain: ${node.category || 'No domain'}\nAccessibility: ${node.score == null ? 'No score available' : node.score.toFixed(3)}\nIncoming links: ${node.incoming}`);
+        groups.append('circle').attr('r', node => node.radius).attr('fill', node => scoreColor(node.score))
+            .attr('stroke', '#ffffff').attr('stroke-width', 1.5);
+        const labelClips = svg.append('defs').selectAll('clipPath').data(layout.nodes).join('clipPath')
+            .attr('id', (node, index) => `${gradientId}-label-${index}`);
+        labelClips.append('circle').attr('r', node => node.radius - 3);
+        const textContext = document.createElement('canvas').getContext('2d');
+        groups.append('text').attr('text-anchor', 'middle').attr('dy', '0.35em')
+            .attr('font-size', node => Math.min(13, Math.max(10, node.radius * 0.36)))
+            .attr('font-family', 'Arial, sans-serif').attr('font-weight', 600)
+            .attr('pointer-events', 'none').attr('clip-path', (node, index) => `url(#${gradientId}-label-${index})`)
+            .attr('fill', node => d3.lab(scoreColor(node.score)).l < 55 ? '#ffffff' : '#14202b')
+            .each(function(node) {
+                const label = d3.select(this);
+                const fontSize = Math.min(13, Math.max(10, node.radius * 0.36));
+                const maxWidth = 2 * Math.sqrt((node.radius - 4) ** 2 - (fontSize * 0.65) ** 2);
+                textContext.font = `600 ${fontSize}px Arial, sans-serif`;
+                const measure = text => textContext.measureText(text).width;
+                label.text(fitNodeLabel(node.title || node.id, maxWidth, measure));
+            });
+        const neighbors = new Map(layout.nodes.map(node => [node.id, new Set([node.id])]));
+        const incidentLinks = new Map(layout.nodes.map(node => [node.id, []]));
+        layout.links.forEach(link => {
+            incidentLinks.get(link.source.id).push(link);
+            if (link.target.id !== link.source.id) incidentLinks.get(link.target.id).push(link);
+            neighbors.get(link.source.id).add(link.target.id);
+            neighbors.get(link.target.id).add(link.source.id);
+        });
+        const highlight = (event, node) => {
+            const adjacent = neighbors.get(node.id);
+            groups.attr('opacity', other => adjacent.has(other.id) ? 1 : 0.15);
+            groups.select('circle').attr('stroke', other => adjacent.has(other.id) ? '#f97316' : '#fff');
+            links.attr('stroke-opacity', 0.025);
+            highlightedLinks.attr('d', incidentLinks.get(node.id).map(linkPath).join(''));
         };
-        const colorScale = d3.scaleOrdinal()
-            .domain(Object.keys(categoryColors))
-            .range(Object.values(categoryColors));
+        const reset = () => {
+            groups.attr('opacity', 1).select('circle').attr('stroke', '#ffffff');
+            links.attr('stroke-opacity', 0.08);
+            highlightedLinks.attr('d', null);
+        };
+        groups.on('mouseenter focus', highlight).on('mouseleave blur', reset);
+        return () => { svg.on('.zoom', null); zoomRef.current = null; };
+    }, [layout, gradientId]);
 
-        // Define the boundary between connected and isolated nodes
-        const boundaryX = width * 0.6;
-    
-        // Clear previous graph elements
-        svg.selectAll("*").remove();
-    
-        // Draw color legend
-        const legend = svg.append("g").attr("transform", "translate(10, 10)");
-    
-        legend.selectAll("rect")
-            .data(categories)
-            .enter().append("rect")
-            .attr("x", 0)
-            .attr("y", (d, i) => i * 20)
-            .attr("width", 20)
-            .attr("height", 15)
-            .attr("fill", d => colorScale(d));
-    
-        legend.selectAll("text")
-            .data(categories)
-            .enter().append("text")
-            .attr("font-family", "Arial")
-            .attr("x", 30)
-            .attr("y", (d, i) => i * 20 + 12)
-            .text(d => d)
-            .attr("class", "legend");
-        
-        // Identify nodes with and without links
-        const linkedNodeIds = new Set();
-        data.links.forEach(link => {
-            linkedNodeIds.add(typeof link.source === 'object' ? link.source.id : link.source);
-            linkedNodeIds.add(typeof link.target === 'object' ? link.target.id : link.target);
+    // Switching sections only changes visibility and framing; keep all SVG nodes.
+    useEffect(() => {
+        if (!layout.nodes.length || !zoomRef.current) return;
+        const svg = d3.select(svgRef.current);
+        const bounds = activeView === 'isolated' ? layout.isolatedBounds : layout.connectedBounds;
+        svg.attr('viewBox', `${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}`);
+        svg.selectAll('[data-cloud-section]').attr('visibility', function() {
+            return this.getAttribute('data-cloud-section') === activeView ? null : 'hidden';
         });
-        
-        // Split nodes into connected and isolated
-        const connectedNodes = data.nodes.filter(node => linkedNodeIds.has(node.id));
-        const isolatedNodes = data.nodes.filter(node => !linkedNodeIds.has(node.id));
-        
-        // Process links to ensure they reference only connected nodes
-        const validLinks = data.links.filter(link => {
-            const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-            return linkedNodeIds.has(sourceId) && linkedNodeIds.has(targetId);
+        svg.call(zoomRef.current.transform, d3.zoomIdentity);
+    }, [layout, activeView]);
+
+    // Downloads include the whole cloud, independent of zoom and hover state.
+    const exportSvg = () => {
+        const clone = svgRef.current.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        clone.setAttribute('width', layout.width);
+        clone.setAttribute('height', layout.height + 75);
+        clone.setAttribute('viewBox', `0 -75 ${layout.width} ${layout.height + 75}`);
+        clone.querySelector('.cloud-content')?.removeAttribute('transform');
+        clone.querySelectorAll('[data-cloud-section]').forEach(section => section.removeAttribute('visibility'));
+        clone.querySelector('.cloud-highlight')?.remove();
+        clone.querySelector('.cloud-links')?.setAttribute('stroke-opacity', '0.08');
+        clone.querySelectorAll('a').forEach(node => {
+            node.setAttribute('opacity', 1);
+            node.querySelector('circle').setAttribute('stroke', '#fff');
         });
-        
-        // Calculate the number of incoming links for each node
-        const incomingLinkCounts = {};
-        data.nodes.forEach(node => {
-            incomingLinkCounts[node.id] = 0;
+        clone.querySelectorAll('.cloud-content line').forEach(line => {
+            if (!line.hasAttribute('stroke-dasharray')) {
+                line.setAttribute('stroke', '#64748b');
+                line.setAttribute('stroke-opacity', '0.08');
+            }
         });
-        
-        data.links.forEach(link => {
-            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-            incomingLinkCounts[targetId] = (incomingLinkCounts[targetId] || 0) + 1;
-        });
-        
-        // Create a scale for node sizes based on incoming links
-        const minNodeSize = 25;
-        const maxNodeSize = 60;
-        const maxIncomingLinks = Math.max(1, ...Object.values(incomingLinkCounts));
-        
-        const nodeSizeScale = d3.scaleLinear()
-            .domain([0, maxIncomingLinks])
-            .range([minNodeSize, maxNodeSize])
-            .clamp(true);
-        
-        // Define the boundary between connected and isolated nodes (horizontal split)
-        const boundaryY = height * 0.7;
-
-        // Split nodes into connected and isolated remains the same
-
-        // Pre-calculate positions for connected nodes using D3 force layout
-        const simulation = d3.forceSimulation(connectedNodes)
-            .force("link", d3.forceLink(validLinks).id(d => d.id).distance(150))
-            .force("charge", d3.forceManyBody().strength(-25))
-            .force("center", d3.forceCenter(width / 2, boundaryY / 2))
-            .force("collide", d3.forceCollide(d => nodeSizeScale(incomingLinkCounts[d.id]) + 9))
-            .force("x", d3.forceX(width / 2).strength(0.05))
-            .force("y", d3.forceY(boundaryY / 2).strength(0.05));
-
-        for (let i = 0; i < 300; ++i) simulation.tick();
-
-        // Calculate positions for isolated nodes in a grid below connected nodes
-        const isolatedCols = Math.ceil(Math.sqrt(isolatedNodes.length));
-        const colSpacing = 60; 
-        const rowSpacing = 80; 
-        const maxCols = Math.floor(width / colSpacing) || 1; // max number of columns that fit horizontally
-        const marginLeft = 50;   // left margin
-        const marginRight = 50;
-        const availableWidth = width - marginLeft - marginRight;
-
-        isolatedNodes.forEach((node, i) => {
-            const row = Math.floor(i / maxCols);
-            const col = i % maxCols;
-
-            // Center row horizontally
-            const nodesInRow = Math.min(maxCols, isolatedNodes.length - row * maxCols);
-            const rowWidth = nodesInRow * colSpacing;
-            const startX = marginLeft + (availableWidth - rowWidth) / 2 + colSpacing / 2;
-
-            node.x = startX + col * colSpacing;
-            node.y = boundaryY + 80 + row * rowSpacing;
-        });
-
-        // Ensure connected nodes stay within top area
-        connectedNodes.forEach(node => {
-            node.x = Math.min(Math.max(node.x, 30), width - 30);
-            node.y = Math.min(Math.max(node.y, 30), boundaryY - 30);
-        });
-
-        // Draw the horizontal divider line
-        svg.append("line")
-            .attr("x1", 0)
-            .attr("y1", boundaryY)
-            .attr("x2", width)
-            .attr("y2", boundaryY)
-            .attr("stroke", "#ccc")
-            .attr("stroke-dasharray", "5,5")
-            .attr("stroke-width", 1);
-
-        // Add label for isolated nodes
-        if (isolatedNodes.length > 0) {
-            svg.append("text")
-                .attr("x", width / 2)
-                .attr("y", boundaryY + 30)
-                .attr("text-anchor", "middle")
-                .attr("font-size", "14px")
-                .attr("font-family", "Arial")
-                .attr("font-weight", "bold")
-                .text("Isolated Nodes");
-        }
-            
-        // Draw links
-        svg.append("g")
-            .selectAll("line")
-            .data(validLinks)
-            .enter().append("line")
-            .attr("class", "link")
-            .attr("data-source", d => typeof d.source === 'object' ? d.source.id : d.source)
-            .attr("data-target", d => typeof d.target === 'object' ? d.target.id : d.target)
-            .attr("x1", d => d.source.x)
-            .attr("y1", d => d.source.y)
-            .attr("x2", d => d.target.x)
-            .attr("y2", d => d.target.y)
-            .attr("stroke", "grey")
-            .attr("stroke-width", 1)
-            .attr("stroke-opacity", 0.3);
-        
-        // Draw connected nodes
-        const connectedNodeGroups = svg.append("g")
-            .selectAll("g.connected")
-            .data(connectedNodes)
-            .enter().append("g")
-            .attr("class", "node-group connected")
-            .attr("data-id", d => d.id)
-            .attr("transform", d => `translate(${d.x},${d.y})`);
-            
-        connectedNodeGroups.each(function(d) {
-            const g = d3.select(this);
-            const nodeSize = nodeSizeScale(incomingLinkCounts[d.id]);
-            
-            // Add a tooltip with link count information
-            const tooltip = g.append("title")
-                .text(d => `${d.title || d.id}\nIncoming links: ${incomingLinkCounts[d.id]}`);
-                
-            const a = g.append("a")
-                .attr("xlink:href", getDatasetUrl)
-                .attr("target", "_blank")
-                .style("cursor", "pointer");
-                
-            a.append("circle")
-                .attr("r", nodeSize)
-                .attr("fill", d => colorScale(d.category))
-                .attr("class", "node-circle");
-            
-            a.append("text")
-                .attr("fill", "black")
-                .attr("font-size", d => Math.min(10 + (nodeSize - minNodeSize) / 5, 14) + "px") // Scale font size with node
-                .attr("font-family", "Arial")
-                .attr("font-weight", "bold")
-                .attr("text-anchor", "middle")
-                .attr("dy", ".35em")
-                .text(d => abbreviateText(d.title || d.id, nodeSize));
-        });
-        
-        // Draw isolated nodes
-        const isolatedNodeGroups = svg.append("g")
-            .selectAll("g.isolated")
-            .data(isolatedNodes)
-            .enter().append("g")
-            .attr("class", "node-group isolated")
-            .attr("data-id", d => d.id)
-            .attr("transform", d => `translate(${d.x},${d.y})`);
-            
-        isolatedNodeGroups.each(function(d) {
-            const g = d3.select(this);
-            // Isolated nodes get the minimum size
-            const nodeSize = minNodeSize;
-            
-            const tooltip = g.append("title")
-                .text(d => `${d.title || d.id}\nIncoming links: 0`);
-                
-            const a = g.append("a")
-                .attr("xlink:href", getDatasetUrl)
-                .attr("target", "_blank")
-                .style("cursor", "pointer");
-                
-            a.append("circle")
-                .attr("r", nodeSize)
-                .attr("fill", d => colorScale(d.category))
-                .style("opacity", 0.8);
-            
-            a.append("text")
-                .attr("fill", "black")
-                .attr("font-size", "10px")
-                .attr("font-family", "Arial")
-                .attr("font-weight", "bold")
-                .attr("text-anchor", "middle")
-                .attr("dy", ".35em")
-                .text(d => abbreviateText(d.title || d.id, nodeSize));
-        });
-        
-        // Add hover effects for connected nodes
-        connectedNodeGroups.on("mouseover", (event, d) => {
-            const nodeId = d.id;
-            // Highlight links connected to this node
-            svg.selectAll(".link").classed("highlighted", link => {
-                const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-                const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-                return sourceId === d.id || targetId === d.id;
-            });
-            d3.select(event.currentTarget).select("circle").classed("highlighted", true);
-
-            svg.selectAll(".node-group").each(function(otherNode) {
-                const otherNodeId = otherNode.id;
-                const isConnected = data.links.some(link => {
-                    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-                    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-                    return (sourceId === nodeId && targetId === otherNodeId) ||
-                           (targetId === nodeId && sourceId === otherNodeId);
-                });
-
-                if (isConnected) {
-                    d3.select(this).select("circle").classed("highlighted", true);
-                }
-            })
-        })
-        .on("mouseout", (event) => {
-            // Remove highlight when mouse leaves
-            svg.selectAll(".link").classed("highlighted", false);
-            d3.select(event.currentTarget).select("circle").classed("highlighted", false);
-            // Unhighlight all node circles
-            svg.selectAll(".node-circle").classed("highlighted", false);
-        });
-
-        // Add hover effects for isolated nodes
-        isolatedNodeGroups.on("mouseover", (event, d) => {
-            // Highlight links connected to this node
-            d3.select(event.currentTarget).select("circle").classed("highlighted", true);
-        })
-        .on("mouseout", (event) => {
-            // Remove highlight when mouse leaves
-            d3.select(event.currentTarget).select("circle").classed("highlighted", false);
-        });
+        const ns = 'http://www.w3.org/2000/svg';
+        const add = (tag, attrs, text) => {
+            const element = document.createElementNS(ns, tag);
+            Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
+            if (text) element.textContent = text;
+            clone.appendChild(element);
+            return element;
+        };
+        const background = add('rect', { x: 0, y: -75, width: layout.width, height: layout.height + 75, fill: '#fff' });
+        clone.insertBefore(background, clone.firstChild);
+        add('text', { x: 30, y: -45, 'font-size': 16, 'font-family': 'Arial, sans-serif' }, 'AccessibleLOD · Accessibility score (0–1) · Node size = incoming links');
+        for (let i = 0; i < 100; i += 1) add('rect', { x: 30 + i * 3, y: -30, width: 3.1, height: 10, fill: scoreColor(i / 99) });
+        add('text', { x: 30, y: -5, 'font-size': 12 }, '0 (low)                                      1 (high)       Gray: no score');
+        return clone;
     };
-    
-    function abbreviateText(text, nodeRadius) {
-        if (!text) return "";
-        
-        // Determine maxLength based on the node size (scale factor can be adjusted)
-        const scaleFactor = 0.22; // tweak this to control label length per radius unit
-        const maxLength = Math.floor(nodeRadius * scaleFactor);
-        
-        if (text.length > maxLength) {
-            return text.substring(0, maxLength) + "...";
-        }
-        return text;
-    }
-
-    const handleDownload = () => {
-        const svgElement = document.getElementById("graph");
-        const clonedSvg = svgElement.cloneNode(true);
-    
-        // Add necessary namespaces
-        clonedSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-        clonedSvg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
-    
-        // Add styles for exported SVG
-        const styleElement = document.createElementNS("http://www.w3.org/2000/svg", "style");
-        styleElement.textContent = `
-            .link { stroke: #aaa; stroke-width: 2; transition: stroke 0.3s; }
-            .highlighted { stroke: orange !important; stroke-width: 4 !important; }
-            .link.highlighted {
-                stroke: orange;
-                stroke-width: 4px;
-                stroke-opacity: 1;
-            }
-            .legend { font-size: 12px; }
-            .isolated { opacity: 0.8; }
-            .node-circle {
-                stroke: none;
-                stroke-width: 2px;
-                transition: stroke 0.3s, stroke-width 0.3s;
-            }
-
-            .node-circle.highlighted {
-                stroke: orange;
-                stroke-width: 4px;
-            }
-        `;
-        clonedSvg.insertBefore(styleElement, clonedSvg.firstChild);
-    
-        // Add a script for interactivity when opened in the browser
-        const scriptContent = `
-            document.addEventListener('DOMContentLoaded', function() {
-                const nodes = document.querySelectorAll('.node-group');
-                const links = document.querySelectorAll('.link');
-
-                function getNodeId(node) {
-                    return node.getAttribute('data-id');
-                }
-
-                function isConnected(a, b) {
-                    return Array.from(links).some(link => {
-                        const source = link.getAttribute('data-source');
-                        const target = link.getAttribute('data-target');
-                        return (source === a && target === b) || (source === b && target === a);
-                    });
-                }
-
-                nodes.forEach(node => {
-                    const nodeId = getNodeId(node);
-                    const circle = node.querySelector('circle');
-
-                    node.addEventListener('mouseover', () => {
-                        // Highlight links
-                        links.forEach(link => {
-                            const source = link.getAttribute('data-source');
-                            const target = link.getAttribute('data-target');
-                            if (source === nodeId || target === nodeId) {
-                                link.classList.add('highlighted');
-                            }
-                        });
-
-                        // Highlight this node
-                        circle.classList.add('highlighted');
-
-                        // Highlight connected nodes
-                        nodes.forEach(otherNode => {
-                            const otherNodeId = getNodeId(otherNode);
-                            if (otherNodeId !== nodeId && isConnected(nodeId, otherNodeId)) {
-                                const otherCircle = otherNode.querySelector('circle');
-                                if (otherCircle) otherCircle.classList.add('highlighted');
-                            }
-                        });
-                    });
-
-                    node.addEventListener('mouseout', () => {
-                        // Remove highlights
-                        links.forEach(link => link.classList.remove('highlighted'));
-                        nodes.forEach(n => {
-                            const c = n.querySelector('circle');
-                            if (c) c.classList.remove('highlighted');
-                        });
-                    });
-
-                    // Open link if clicked
-                    node.addEventListener('click', function() {
-                        const url = node.getAttribute('data-url');
-                        if (url) {
-                            window.open(url, "_blank");
-                        }
-                    });
-                });
-            });
-            `;
-        
-        const scriptElement = document.createElementNS("http://www.w3.org/2000/svg", "script");
-        scriptElement.textContent = scriptContent;
-        clonedSvg.appendChild(scriptElement);
-    
-        // Convert to blob and trigger download
-        const serializer = new XMLSerializer();
-        const svgData = serializer.serializeToString(clonedSvg);
-        const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+    const download = (blob, extension) => {
         const url = URL.createObjectURL(blob);
-    
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "static-graph.svg";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `accessiblelod-cloud.${extension}`;
+        anchor.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
-
-    const handleDownloadPNG = () => {
-        const svgElement = document.getElementById("graph");
-        const serializer = new XMLSerializer();
-        const svgData = serializer.serializeToString(svgElement);
-    
-        const scaleFactor = 1;
-        const originalWidth = svgElement.clientWidth;
-        const originalHeight = svgElement.clientHeight;
-        const width = originalWidth * scaleFactor;
-        const height = originalHeight * scaleFactor;
-    
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-    
-        const ctx = canvas.getContext("2d");
-    
-        const image = new Image();
-        const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-        const url = URL.createObjectURL(svgBlob);
-    
-        image.onload = () => {
-            ctx.drawImage(image, 0, 0, width, height);
-            URL.revokeObjectURL(url);
-    
-            canvas.toBlob(blob => {
-                const link = document.createElement("a");
-                link.download = "static-graph.png";
-                link.href = URL.createObjectURL(blob);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }, "image/png");
-        };
-    
-        image.src = url;
+    const handleExport = async format => {
+        setExportError('');
+        setExporting(true);
+        try {
+            const svg = exportSvg();
+            const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml;charset=utf-8' });
+            if (format === 'svg') download(blob, 'svg');
+            if (format === 'pdf') {
+                const [{ jsPDF }] = await Promise.all([import('jspdf'), import('svg2pdf.js')]);
+                const pdf = new jsPDF({ orientation: layout.width > layout.height + 75 ? 'landscape' : 'portrait', unit: 'pt', format: [layout.width, layout.height + 75] });
+                await pdf.svg(svg, { x: 0, y: 0, width: layout.width, height: layout.height + 75 });
+                pdf.save('accessiblelod-cloud.pdf');
+            }
+            if (format === 'png') {
+                const url = URL.createObjectURL(blob);
+                try {
+                    const image = new Image();
+                    image.src = url;
+                    await image.decode();
+                    const scale = Math.min(2, 8192 / Math.max(layout.width, layout.height + 75));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.ceil(layout.width * scale);
+                    canvas.height = Math.ceil((layout.height + 75) * scale);
+                    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+                    const png = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                    if (!png) throw new Error('PNG export failed');
+                    download(png, 'png');
+                } finally { URL.revokeObjectURL(url); }
+            }
+        } catch (err) { setExportError('Unable to export the cloud. Please try again.'); }
+        finally { setExporting(false); }
     };
-
-    const handleDownloadPDF = () => {
-        const svgElement = document.getElementById("graph");
-        const svgWidth = svgElement.clientWidth;
-        const svgHeight = svgElement.clientHeight;
-        
-        const clonedSvg = svgElement.cloneNode(true);
-        
-        clonedSvg.setAttribute("viewBox", `0 0 ${svgWidth} ${svgHeight}`);
-        
-        clonedSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-        clonedSvg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
-        
-        // Add styles for exported PDF
-        const styleElement = document.createElementNS("http://www.w3.org/2000/svg", "style");
-        styleElement.textContent = `
-            .link { stroke: #aaa; stroke-width: 2; }
-            .highlighted { stroke: orange; stroke-width: 4; }
-            .link.highlighted {
-                stroke: orange;
-                stroke-width: 4px;
-                stroke-opacity: 1;
-            }
-            .legend { font-size: 12px; }
-            .isolated { opacity: 0.8; }
-            .node-circle {
-                stroke: none;
-                stroke-width: 2px;
-            }
-            .node-circle.highlighted {
-                stroke: orange;
-                stroke-width: 4px;
-            }
-        `;
-        clonedSvg.insertBefore(styleElement, clonedSvg.firstChild);
-        
-        const serializer = new XMLSerializer();
-        const svgData = serializer.serializeToString(clonedSvg);
-        
-        let orientation = svgWidth > svgHeight ? 'landscape' : 'portrait';
-        
-        // Create a new PDF with jsPDF
-        const pdf = new jsPDF({
-            orientation: orientation,
-            unit: 'pt',
-            format: [svgWidth, svgHeight]
-        });
-        
-        // Add SVG to PDF document
-        const element = document.createElement('div');
-        element.innerHTML = svgData;
-        const svgElement2 = element.firstChild;
-        
-        // Convert SVG to PDF
-        pdf.svg(svgElement2, {
-            x: 0,
-            y: 0,
-            width: svgWidth,
-            height: svgHeight
-        })
-        .then(() => {
-            // Save the PDF file
-            pdf.save('static-graph.pdf');
-        });
-    };
-
     return (
-        <div
-          style={{
-            height: "100vh", // Full height of the viewport
-            width: "100vw",  // Full width of the viewport
-            margin: 0,
-            padding: 0,
-            display: "flex",
-            flexDirection: "column",
-            fontFamily: "sans-serif",
-          }}
-        >
-          {/* Graph Area */}
-          <div style={{ flex: 1, position: "relative", overflowY: "auto" }}>
-            <svg id="graph" width="100%" height="100%">
-              {data.nodes.length === 0 && (
-                <text x="50%" y="50%" textAnchor="middle" fontSize="16px" fill="#555">
-                  Loading graph data...
-                </text>
-              )}
-            </svg>
-          </div>
-    
-          {/* Button Bar */}
-          <div
-            style={{
-                padding: "20px",
-                display: "flex",
-                justifyContent: "center",
-                gap: "20px",
-                backgroundColor: "#f9fafb",
-                borderTop: "1px solid #e5e7eb",
-            }}
-          >
-            <button
-              id="download"
-              onClick={handleDownload}
-              style={buttonStyle("#3B82F6", "#2563EB")}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#2563EB")}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#3B82F6")}
-            >
-              Download cloud as SVG
-            </button>
-            <button
-              onClick={handleDownloadPNG}
-              style={buttonStyle("#10B981", "#059669")}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#059669")}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#10B981")}
-            >
-              Download Cloud as PNG
-            </button>
-            <button
-              onClick={handleDownloadPDF}
-              style={buttonStyle("#EF4444", "#DC2626")}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#DC2626")}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#EF4444")}
-            >
-              Download Cloud as PDF
-            </button>
-          </div>
-          <Footer />
+        <div className="lod-cloud">
+            <div className="cloud-toolbar">
+                <div className="cloud-legend">
+                    <strong>Accessibility score</strong>
+                    <svg width="180" height="30" role="img" aria-label="Accessibility score from 0, light teal, through AccessibleLOD teal, to 1, dark teal">
+                        <defs><linearGradient id={gradientId}>{d3.range(0, 1.01, 0.1).map(value => <stop key={value} offset={`${value * 100}%`} stopColor={scoreColor(value)} />)}</linearGradient></defs>
+                        <rect width="180" height="10" rx="5" fill={`url(#${gradientId})`} />
+                        <text x="0" y="26" fontSize="11">0 · Low</text><text x="180" y="26" textAnchor="end" fontSize="11">1 · High</text>
+                    </svg>
+                    <span className="cloud-missing"><i /> No score</span>
+                    <small>Normalized score (0–1)</small>
+                </div>
+                <div className="cloud-controls" aria-label="Graph controls">
+                    <button aria-label="Zoom in" onClick={() => zoomRef.current && d3.select(svgRef.current).call(zoomRef.current.scaleBy, 1.5)}>+</button>
+                    <button aria-label="Zoom out" onClick={() => zoomRef.current && d3.select(svgRef.current).call(zoomRef.current.scaleBy, 1 / 1.5)}>−</button>
+                    <button disabled={!layout.connectedCount} aria-pressed={activeView === 'connected'} onClick={() => fitView('connected')}>Fit cloud</button>
+                    <button
+                        disabled={activeView === 'isolated' ? !layout.connectedCount : !layout.isolatedCount}
+                        onClick={() => fitView(activeView === 'isolated' ? 'connected' : 'isolated')}
+                    >
+                        {activeView === 'isolated' ? 'Inspect connected component' : 'Inspect isolated nodes'}
+                    </button>
+                </div>
+            </div>
+            <div className="cloud-hint">{layout.nodes.length.toLocaleString()} datasets · {layout.links.length.toLocaleString()} links · Size: incoming links · Scroll to zoom, drag to pan, select a node to explore</div>
+            <div className="cloud-viewport">
+                {error || layoutError ? <p role="alert">{error || layoutError}</p> : loading || layoutLoading ? <p role="status">{loading ? 'Loading graph data…' : 'Preparing cloud…'}</p> : !layout.nodes.length ? <p>No datasets available.</p> : null}
+                <svg ref={svgRef} id="graph" aria-label="AccessibleLOD dataset network" />
+            </div>
+            {exportError && <p role="alert">{exportError}</p>}
+            <div className="cloud-downloads">
+                {['svg', 'png', 'pdf'].map(format => <button key={format} disabled={!layout.nodes.length || exporting} onClick={() => handleExport(format)}>Download {format.toUpperCase()}</button>)}
+            </div>
+            <Footer />
         </div>
-      );
-
-    function buttonStyle(color, hoverColor) {
-        return {
-        padding: "10px 20px",
-        backgroundColor: color,
-        color: "white",
-        border: "none",
-        borderRadius: "9999px",
-        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        cursor: "pointer",
-        transition: "all 0.3s ease",
-        };
-    }
-};
-
-export default StaticGraph;
+    );
+}
+export default Graph;

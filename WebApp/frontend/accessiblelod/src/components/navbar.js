@@ -39,16 +39,6 @@ function NavBar() {
               {/* <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link> */}
               <Nav.Link as={Link} to="/about">About</Nav.Link>
             </Nav>
-            <a
-              className="btn navbar-questionnaire-link ms-lg-auto mt-3 mt-lg-0 align-self-lg-center flex-shrink-0"
-              href={FRAMEWORK_QUESTIONNAIRE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FaCommentDots aria-hidden="true" focusable="false" size={19} />
-              Share your feedback
-              <span className="visually-hidden"> (opens in a new tab)</span>
-            </a>
              {/*  <button
                     onClick={() => window.open('https://github.com/GabrieleT0/CHe-CLOUD', '_blank')}
                     style={{

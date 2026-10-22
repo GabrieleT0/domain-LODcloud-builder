@@ -1,122 +1,77 @@
-import React, { use, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { base_url, kghb_url } from '../api';
+import { base_url } from '../api';
 import axios from 'axios';
-import RadarChart from '../components/radar_chart'; 
-import RadialBarChart from '../components/radial_bar';
+import RadarChart from '../components/radar_chart';
 import GaugeChart from '../components/gauge_chart';
 import { Row, Col, Table } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
 import Footer from '../components/footer';
-import { formatFairnessDataForBrushChart } from '../utils';
-import BrushChart from '../components/line_chart';
-import ReactMarkdown from 'react-markdown';
 import Navbar from '../components/navbar';
 
 
+
+export const scoreNumber = value => {
+    if (value == null || String(value).trim() === '') return null;
+    const number = Number(String(value).replace(',', '.'));
+    return Number.isFinite(number) ? number : null;
+};
 
 function FairnessInfo(){
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
     const dataset_id = queryParams.get('dataset_id');
     const [fairness_data, setFairnessData] = useState({});
-    const [dataset_metadata, setDatasetMetadata] = useState(false);
+    const [dataset_metadata, setDatasetMetadata] = useState(null);
     const [showDownloads, setShowDownloads] = useState(false);
-    const [fairness_ot, setFairnessOt] = useState(false);
-    const [brushSeriesFairness, setBrushSeriesFairness] = useState([]);
-    const [minDate, setMinDate] = useState(null);
-    const [maxDate, setMaxDate] = useState(null);
-    const [llmExplanation, setLlmExplanation] = useState('');
-    const [showExplanation, setShowExplanation] = useState(false);
-    const [loadingExplanation, setLoadingExplanation] = useState(false);
-    const [animatedText, setAnimatedText] = useState('');
-    const [done, setDone] = useState(false);
-    // Over time explanation
-    const [llmExplanationOT, setLlmExplanationOT] = useState('');
-    const [showExplanationOT, setShowExplanationOT] = useState(false);
-    const [loadingExplanationOT, setLoadingExplanationOT] = useState(false);
-    const [animatedTextOT, setAnimatedTextOT] = useState('');
-    const [doneOT, setDoneOT] = useState(false);
+    const [scoresLoading, setScoresLoading] = useState(true);
+    const [metadataLoading, setMetadataLoading] = useState(true);
+    const [scoresError, setScoresError] = useState(null);
+    const [metadataError, setMetadataError] = useState(null);
     // Filter and search for accessibility table
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
 
     useEffect(() => {
-        async function getFairnessData(){
-            try {
-                //TODO: uncomment this below when the backend will be connected with KGHB
-                //Same trasformation done by KGHeartBeat
-                //let sanitizedId = dataset_id.replace(/[\\/*?:"<>|]/g, "");
-                //sanitizedId = dataset_id.replace(/[\\/*?:"<>|]/g, "");
-                //sanitizedId = sanitizedId.replace(/[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]/g, "");
-                //sanitizedId = sanitizedId.replace(/\s+/g, "");
-
-                const response = await axios.get(`${base_url}/AccessibleLOD_data/accessibility_data/${dataset_id}`);
-                console.log(response.data)
-                //const responseOT = await axios.get(`${kghb_url}/fairness/fairness_over_time/${sanitizedId}`);
-                setFairnessData(response.data)
-                //setFairnessOt(responseOT.data);
-            } catch (error) {
-            console.error("Error:",error)
-            }
-        } 
-        getFairnessData();
-        async function getJsonData(){
-            try {
-                const response = await axios.get(`${base_url}/AccessibleLOD_data/dataset_metadata/${dataset_id}`);
-                setDatasetMetadata(response.data)
-            } catch (error) {
-            console.error("Error:",error)
-            }
-        } 
-        getJsonData();
-    }, [])
-
-    const chartReady = fairness_data && Object.keys(fairness_data).length > 0;
-
-    const f_chart_categories = [
-        "operable",
-        "understandable",
-        "robust",
-        "perceivable",
-    ]
-    const f_values = f_chart_categories.map(category =>
-        parseFloat(fairness_data[category] || 0)
-    );
-/*     const fetchLlmExplanation = async () => {
-        setLoadingExplanation(true);
-        try {
-            const response = await axios.post(`${base_url}/llm/llm_explain_fair`,{
-                fair_data: fairness_data
-            });
-            setLlmExplanation(response.data || "No explanation returned.");
-            setShowExplanation(true);
-        } catch (error) {
-            console.error("Error fetching LLM explanation:", error);
-            setLlmExplanation("Failed to fetch explanation.");
-            setShowExplanation(true);
-        } finally {
-            setLoadingExplanation(false);
+        let active = true;
+        const controller = new AbortController();
+        setFairnessData({});
+        setDatasetMetadata(null);
+        setScoresError(null);
+        setMetadataError(null);
+        setScoresLoading(true);
+        setMetadataLoading(true);
+        setShowDownloads(false);
+        if (!dataset_id) {
+            setScoresError('No dataset selected. Open a dataset from the cloud or search page.');
+            setScoresLoading(false);
+            setMetadataLoading(false);
+            return () => { active = false; controller.abort(); };
         }
-    }; */
+        const encodedId = encodeURIComponent(dataset_id);
+        const load = async (endpoint, setData, setError, setLoading, message) => {
+            try {
+                const response = await axios.get(`${base_url}/AccessibleLOD_data/${endpoint}/${encodedId}`, { signal: controller.signal });
+                if (!response.data || typeof response.data !== 'object' || Array.isArray(response.data)) throw new Error('Invalid dataset response');
+                if (active) setData(response.data);
+            } catch (error) {
+                if (active) setError(message);
+            } finally {
+                if (active) setLoading(false);
+            }
+        };
+        load('accessibility_data', setFairnessData, setScoresError, setScoresLoading, 'Accessibility scores are unavailable for this dataset.');
+        load('dataset_metadata', setDatasetMetadata, setMetadataError, setMetadataLoading, 'Dataset information is unavailable.');
+        return () => { active = false; controller.abort(); };
+    }, [dataset_id]);
 
-/*     const fetchLlmExplanationOT = async () => {
-        setLoadingExplanationOT(true);
-        try {
-            const response = await axios.post(`${base_url}/llm/llm_explain_fairness_score_ot`,{
-                fair_data: fairness_ot
-            });
-            setLlmExplanationOT(response.data || "No explanation returned.");
-            setShowExplanationOT(true);
-        } catch (error) {
-            console.error("Error fetching LLM explanation:", error);
-            setLlmExplanationOT("Failed to fetch explanation.");
-            setShowExplanationOT(true);
-        } finally {
-            setLoadingExplanationOT(false);
-        }
-    };
- */
+    const overallRaw = scoreNumber(fairness_data.overall_score_with_special ?? fairness_data.sum_overall);
+    const overallScore = overallRaw == null ? null : Math.max(0, Math.min(1, overallRaw / 6));
+    const f_chart_categories = ['Operable', 'Understandable', 'Robust', 'Perceivable'];
+    const f_values = f_chart_categories.map(category => scoreNumber(
+        fairness_data[`${category.toLowerCase()}_score`] ?? fairness_data[category.toLowerCase()]
+    ));
+    const radarReady = f_values.some(value => value != null);
+
     // Accessibility data formatting and categorization
     const formatLabel = (key) => {
         return key
@@ -127,73 +82,29 @@ function FairnessInfo(){
     const getScoreColor = (value) => {
         const numValue = parseFloat(value);
         if (isNaN(numValue) || value === '' || value === null) return 'text-muted';
-        if (numValue >= 0.7) return 'text-success fw-bold';
-        if (numValue >= 0) return 'text-warning fw-bold';
-        return 'text-danger fw-bold';
+        if (numValue === 1) return 'text-success fw-bold';
+        if (numValue === 0) return 'text-danger fw-bold';
+        return 'text-warning fw-bold';
     };
 
     const getScoreBadge = (value) => {
         const numValue = parseFloat(value);
         if (isNaN(numValue) || value === '' || value === null) return 'secondary';
-        if (numValue >= 0.7) return 'success';
-        if (numValue >= 0) return 'warning';
-        return 'danger';
+        if (numValue === 1) return 'success';
+        if (numValue === 0) return 'danger';
+        return 'warning';
     };
 
-    const categorizeMetric = (key) => {
-        const perceivableKeys = ['audio', 'audio_metadata', 
-                                 'image', 'image_metadata', 'video', 
-                                 'video_metadata', 'accessibility_for_deaf', 
-                                 'accessibility_for_visually_impaired'];
-        const acc4visuallyImpairedKeys = ['alt_image_score', 'audio_description'];
-        const acc4deafKeys = ['video_description', 'video_sign_language', 'audio_sign_language','video_subtitle','audio_subtitle'];
-        const operableKeys = ['robots_txt', 'open_license','contact_person','dump_size','auth','dump_format','alternative_access_point_score'];
-        const understandableKeys = ['description_readability', 'labels', 'lang', 'metadata_lang', 'example'];
-        const robustKeys = ['canonical_ID', 'metadata_broken_links', 'version', 'robust','webpage_status'];
-
-        if (perceivableKeys.includes(key)) return 'Perceivable';
-        if (operableKeys.includes(key)) return 'Operable';
-        if (understandableKeys.includes(key)) return 'Understandable';
-        if (robustKeys.includes(key)) return 'Robust';
-        if (acc4visuallyImpairedKeys.includes(key)) return 'Accessibility for Visually Impaired';
-        if (acc4deafKeys.includes(key)) return 'Accessibility for Deaf or Hard-of-hearing Users';
-        return 'Other';
+    const metricGroups = {
+        'Perceivable': ['audio', 'audio_meta', 'image', 'image_metadata', 'video', 'video_meta', 'assistive_technologies'],
+        'Operable': ['open_license', 'contact_point', 'dump_size', 'check_authentication', 'common_format_availability', 'alternative_access_point', 'sparql_availability_evaluator'],
+        'Understandable': ['description_readability', 'human_redeable_labels', 'data_lang', 'metadata_lang', 'example'],
+        'Robust': ['canonical_citation', 'metadata_broken_links_rate', 'version', 'webpage_status'],
+        'Accessibility for Visually Impaired': ['alt_image', 'audio_description_ratio'],
+        'Accessibility for Deaf or Hard-of-hearing Users': ['video_description_ratio', 'video_sign_language_ratio', 'audio_sign_language_ratio', 'video_subtitle_ratio', 'audio_subtitle_ratio'],
     };
-
-        // Define which keys to display in the accessibility table
-    const displayKeys = [
-        'alt_image_score',
-        'audio',
-        'video',
-        'audio_metadata',
-        'video_metadata',
-        'image_metadata',
-        'accessibility_for_deaf',
-        'accessibility_for_visually_impaired',
-        'webpage_status',
-        'robots_txt',
-        'description_readability',
-        'labels',
-        'image',
-        'example',
-        'canonical_ID',
-        'metadata_broken_links',
-        'version',
-        'open_license',
-        'contact_person',
-        'alternative_access_point_score',
-        'audio_description',
-        'audio_sign_language',
-        'audio_subtitle',
-        'auth',
-        'dump_format',
-        'dump_size',
-        'metadata_lang',
-        'video_description',
-        'video_sign_language',
-        'video_subtitle',
-        'lang',
-    ];
+    const metricCategories = Object.fromEntries(Object.entries(metricGroups).flatMap(([category, keys]) => keys.map(key => [key, category])));
+    const displayKeys = Object.keys(metricCategories);
 
     const renderValue = (value) => {
         if (value === '' || value === null || value === undefined) {
@@ -211,8 +122,8 @@ function FairnessInfo(){
         .map(([key, value]) => ({
             key,
             label: formatLabel(key),
-            value: value.replace(',', '.'),
-            category: categorizeMetric(key)
+            value: typeof value === 'string' ? value.replace(',', '.') : value,
+            category: metricCategories[key]
         }))
         .filter(metric => {
             const matchesSearch = metric.label.toLowerCase().includes(searchTerm.toLowerCase());
@@ -231,23 +142,24 @@ function FairnessInfo(){
                 <div className="text-center mb-4">
                 {dataset_metadata?.keywords?.includes("ontology") ? (
                     <>
-                    <h1 className="d-inline mb-4">{dataset_metadata.title}</h1>
+                    <h1 className="d-inline mb-4">{dataset_metadata?.title || dataset_id || 'Dataset'}</h1>
                     <span className="badge bg-warning text-dark d-inline ms-2">Ontology</span>
                     </>
                 ) : (
                     <>
-                    <h1 className="d-inline mb-4">{dataset_metadata.title}</h1>
+                    <h1 className="d-inline mb-4">{dataset_metadata?.title || dataset_id || 'Dataset'}</h1>
                     <span className="badge bg-secondary d-inline ms-2">Dataset</span>
                     </>
                 )}
                 </div>
 
-                {dataset_metadata.description ? (
-                    <p className="text-justify mb-5">{dataset_metadata.description.en}</p>
+                {dataset_metadata?.description ? (
+                    <p className="text-justify mb-5">{typeof dataset_metadata.description === 'string' ? dataset_metadata.description : dataset_metadata.description.en || 'No description available.'}</p>
                 ) : (
-                    <p className="text-center mb-5">Loading Description data</p>
+                    <p className="text-center mb-5">{metadataLoading ? 'Loading dataset information…' : 'No description available.'}</p>
                 )}
 
+            {metadataError && <p role="alert" className="text-center">{metadataError}</p>}
             {dataset_metadata && (
                 <div className="card shadow-sm p-4 mb-5">
                     <h5 className="mb-3">Dataset Information</h5>
@@ -269,22 +181,22 @@ function FairnessInfo(){
                                 <strong>License: </strong>Not specified
                             </Col>
                         )}
-                        {dataset_metadata.contact_point.email || dataset_metadata.contact_point.name ? (
+                        {dataset_metadata.contact_point?.email || dataset_metadata.contact_point?.name ? (
                             <Col md={6} className="mb-3">
                                 <strong>Contact point</strong> <br />
-                                <strong>email: </strong>{dataset_metadata.contact_point.email} <br />
-                                <strong>name: </strong>{dataset_metadata.contact_point.name}
+                                <strong>email: </strong>{dataset_metadata.contact_point?.email} <br />
+                                <strong>name: </strong>{dataset_metadata.contact_point?.name}
                             </Col>
                         ) : (
                             <Col md={6} className="mb-3">
                                 <strong>Contact point not specified</strong>
                             </Col>
                         )}
-                        {dataset_metadata.sparql[0] ? (
+                        {dataset_metadata.sparql?.[0] ? (
                             <Col md={6} className="mb-3">
                                 <strong>SPARQL Endpoint: </strong>
-                                <a href={dataset_metadata.sparql[0].access_url} target="_blank" rel="noopener noreferrer">
-                                    {dataset_metadata.sparql[0].access_url}
+                                <a href={dataset_metadata.sparql?.[0].access_url} target="_blank" rel="noopener noreferrer">
+                                    {dataset_metadata.sparql?.[0].access_url}
                                 </a>
                             </Col>
                         ) : (
@@ -320,49 +232,19 @@ function FairnessInfo(){
                     </Row>
                 </div>
             )}
-{/*                 <div className="mb-3">
-                    <small className="text-muted">
-                        FAIR metrics last updated on: <b>{new Date(fairness_data.analysis_date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                        })}</b>. Assessment provided by <a href='https://kgheartbeat.di.unisa.it/' target='_blank' rel="noopener noreferrer">KGHeartBeat</a>.
-                    </small>
-                    <div className="my-3">
-                        <button className="btn btn-outline-secondary" onClick={fetchLlmExplanation}>
-                            {loadingExplanation ? 'Loading explanation...' : '🧠 Explain this assessment'}
-                        </button>
-                    </div>
-                    {showExplanation && (
-                        <div className="card shadow-sm p-3 my-3">
-                            <div className="d-flex justify-content-between align-items-center">
-                                <h5 className="mb-0">LLM Generated Explanation</h5>
-                                <button
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={() => setShowExplanation(false)}
-                                    title="Close explanation"
-                                >
-                                    ✖
-                                </button>
-                            </div>
-                            <small>Model used: <b>{llmExplanation.model_used}</b></small>
-                            <hr />
-                            <ReactMarkdown>{llmExplanation.llm_response}</ReactMarkdown>
-                        </div>
-                    )}
-                </div> */}
-                {chartReady ? (
-                    <Row className="g-4">
-                    <Col md={6} sm={12}>
-                        <div className="card shadow-sm p-3">
-                        <h5 className="card-title text-center"></h5>
-                        <GaugeChart label={'Overall Score'} value={parseFloat(fairness_data['sum_overall'].replace(',','.'))} />
-                        </div>
-                    </Col>
 
-                    <Col md={6} sm={12}>
+                {!scoresLoading && (overallScore != null || radarReady) ? (
+                    <Row className="g-4">
+                    {overallScore != null && <Col md={6} sm={12}>
                         <div className="card shadow-sm p-3">
-                        <h5 className="card-title text-center"></h5>
+                        <h5 className="card-title text-center">Accessibility</h5>
+                        <GaugeChart label="Overall accessibility score" value={overallScore} />
+                        </div>
+                    </Col>}
+
+                    {radarReady && <Col md={6} sm={12}>
+                        <div className="card shadow-sm p-3">
+                        <h5 className="card-title text-center">Accessibility</h5>
                         <RadarChart
                             title={''}
                             categories={f_chart_categories}
@@ -370,13 +252,13 @@ function FairnessInfo(){
                             height={340}
                         />
                         </div>
-                    </Col>
+                    </Col>}
                     </Row>
                 ) : (
-                    <p className="text-center">Loading accessibility data...</p>
+                    <p className="text-center" role={scoresError ? 'alert' : 'status'}>{scoresLoading ? 'Loading accessibility data…' : scoresError || 'Accessibility scores are unavailable for this dataset.'}</p>
                 )}
 
-                {/* ACCESSIBILITY METRICS TABLE */}
+
                 <div className="card shadow-sm p-4 mb-5 mt-5">
                     <div className="d-flex justify-content-between align-items-center mb-4">
                         <h4 className="mb-0">Accessibility Dimensions</h4>
@@ -385,7 +267,7 @@ function FairnessInfo(){
                         </span>
                     </div>
 
-                    {/* Search and Filter Controls */}
+
                     <Row className="mb-4">
                         <Col md={6}>
                             <div className="input-group">
@@ -416,7 +298,7 @@ function FairnessInfo(){
                         </Col>
                     </Row>
 
-                    {/* Responsive Table */}
+
                     <div className="table-responsive">
                         <Table hover bordered className="mb-0 align-middle">
                             <thead className="table-dark">
@@ -433,8 +315,7 @@ function FairnessInfo(){
                                         <tr key={metric.key} className="hover-highlight">
                                             <td>
                                                 <strong>{metric.label}</strong>
-                                                {/* <br />
-                                                <small className="text-muted font-monospace">{metric.key}</small> */}
+
                                             </td>
                                             <td>
                                                 <span className={`badge bg-${
@@ -456,9 +337,9 @@ function FairnessInfo(){
                                             <td className="text-center">
                                                 {metric.value !== '' && metric.value !== null && !isNaN(parseFloat(metric.value)) ? (
                                                     <span className={`badge bg-${getScoreBadge(metric.value)}`}>
-                                                        {parseFloat(metric.value) >= 0.7 ? '✓ Good' :
-                                                         parseFloat(metric.value) >= 0 ? '⚠ Neutral' :
-                                                         '✗ Poor'}
+                                                        {parseFloat(metric.value) === 1 ? '✓ Good' :
+                                                         parseFloat(metric.value) === 0 ? '✗ Poor' :
+                                                         '⚠ Moderate'}
                                                     </span>
                                                 ) : (
                                                     <span className="badge bg-secondary">—</span>
@@ -477,75 +358,31 @@ function FairnessInfo(){
                         </Table>
                     </div>
 
-                    {/* Legend */}
+
                     <div className="mt-4 p-3 bg-light rounded">
                         <h6 className="mb-3">Score Legend:</h6>
                         <Row>
                             <Col md={4}>
                                 <span className="badge bg-success me-2">✓ Good</span>
-                                <small>Score ≥ 0.7</small>
+                                <small>Score = 1</small>
                             </Col>
                             <Col md={4}>
-                                <span className="badge bg-warning me-2">⚠ Neutral</span>
-                                <small>Score 0 to 0.7</small>
+                                <span className="badge bg-warning me-2">⚠ Moderate</span>
+                                <small>All other scores</small>
                             </Col>
                             <Col md={4}>
                                 <span className="badge bg-danger me-2">✗ Poor</span>
-                                <small>Score &lt; 0</small>
+                                <small>Score = 0</small>
                             </Col>
                         </Row>
                     </div>
                 </div>
 
-                    {/* <div className="mt-5">
-                        <button className="btn btn-outline-secondary" onClick={fetchLlmExplanationOT}>
-                            {loadingExplanationOT ? 'Loading explanation...' : '🧠 Explain the FAIR score over time'}
-                        </button>
-                    </div>
-                    {showExplanationOT && (
-                        <div className="card shadow-sm p-3 my-3">
-                            <div className="d-flex justify-content-between align-items-center">
-                                <h5 className="mb-0">LLM Generated Explanation</h5>
-                                <button
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={() => setShowExplanationOT(false)}
-                                    title="Close explanation"
-                                >
-                                    ✖
-                                </button>
-                            </div>
-                            <small>Model used: <b>{llmExplanationOT.model_used}</b></small>
-                            <hr />
-                            <ReactMarkdown>{llmExplanationOT.llm_response}</ReactMarkdown>
-                        </div>
-                    )}
-                <Row className="g-1 mt-3">
-                    { fairness_ot ? (
-                        <Col md={12}>
-                            <div className="card shadow-sm p-3">
-                                <BrushChart
-                                    data={brushSeriesFairness}
-                                    xAxisLabel="Time"
-                                    yAxisLabel="Fairness Score"
-                                    minDate={minDate}
-                                    maxDate={maxDate}
-                                    height={340}
-                                    kg_name={dataset_metadata.title}
-                                />
-                            </div>
-                        </Col>
-                    ) : (
-                        <Col md={12}>
-                            <div className="card shadow-sm p-3">
-                                <h5 className="card-title text-center">Loading FAIRness data over time</h5>
-                            </div>
-                        </Col>
-                    )}
-                </Row> */}
+
             </div>
             <Footer />
-            
-            {/* Custom CSS for hover effects */}
+
+
             <style>{`
                 .hover-highlight:hover {
                     background-color: #f8f9fa;

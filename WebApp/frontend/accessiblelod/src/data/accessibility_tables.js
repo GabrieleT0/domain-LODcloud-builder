@@ -1,52 +1,58 @@
-const ratio = (numerator, denominator, offset = 0) => ({ numerator, denominator, offset });
+const ratio = (numerator, denominator, guard = false) => ({ numerator, denominator, guard });
 const cases = (...branches) => ({ branches });
+const dataDimensions = new Set(['Image', 'Audio', 'Video', 'Data Lang', 'Labels', 'Alt', 'Audio description', 'Video description', 'signLang_video', 'signLang_audio', 'captions_video', 'captions_audio', 'transcript_video', 'transcript_audio']);
+const requirements = { Alt: 'Image', 'Audio description': 'Audio', 'Video description': 'Video', signLang_video: 'Video', signLang_audio: 'Audio', captions_video: 'Video', captions_audio: 'Audio', transcript_video: 'Video', transcript_audio: 'Audio' };
+const dimension = (name, description, scoring) => ({
+  name, description, scoring,
+  level: dataDimensions.has(name) ? 'D' : 'M',
+  requirement: requirements[name],
+});
 
 export const accessibilityTables = [
   {
     id: 'table-1',
     title: 'Accessibility for All',
-    caption: 'Accessibility for All parameters are documented with their name, a brief textual description, the associated level—distinguishing between data (D) and metadata (M)—and the corresponding scoring function.',
+    caption: 'Accessibility dimensions, their definitions, data (D) or metadata (M) level, and scoring functions on a 0–1 scale.',
     groups: [
       {
         name: 'Perceivable',
         rows: [
-          { name: 'Image metadata', description: 'Presence of metadata representations as an image.', level: 'M', scoring: cases(['1', 'present'], ['0', 'otherwise']) },
-          { name: 'Image', description: 'Visual element enriching a dataset’s expressiveness, accessibility, and multimodal value.', level: 'D', scoring: ratio('# resources with images src', '# triples') },
-          { name: 'Audio metadata', description: 'Presence of metadata representations as an audio.', level: 'M', scoring: cases(['1', 'at least an audio present'], ['0', 'otherwise']) },
-          { name: 'Audio', description: 'Audio element enriching a dataset’s expressiveness, accessibility, and multimodal value.', level: 'D', scoring: ratio('# resources with audio src', '# triples') },
-          { name: 'Video metadata', description: 'Presence of metadata representations as a video.', level: 'M', scoring: cases(['1', 'at least a video present'], ['0', 'otherwise']) },
-          { name: 'Video', description: 'Video element enriching a dataset’s expressiveness, accessibility, and multimodal value.', level: 'D', scoring: ratio('# resources with video src', '# triples') },
+          dimension('Image metadata', 'Metadata include a visual representation of the dataset.', cases(['1', 'present'], ['0', 'otherwise'])),
+          dimension('Image', 'Visual element enriching a dataset’s expressiveness, accessibility, and multimodal value.', ratio('# resources with images src', '# resources')),
+          dimension('Audio metadata', 'Metadata include an audio representation of the dataset.', cases(['1', 'present'], ['0', 'otherwise'])),
+          dimension('Audio', 'Audio element enriching a dataset’s expressiveness, accessibility, and multimodal value.', ratio('# resources with audio src', '# resources')),
+          dimension('Video metadata', 'Metadata include a video representation of the dataset.', cases(['1', 'present'], ['0', 'otherwise'])),
+          dimension('Video', 'Video element enriching a dataset’s expressiveness, accessibility, and multimodal value.', ratio('# resources with video src', '# resources')),
         ],
       },
       {
         name: 'Understandable',
         rows: [
-          { name: 'Metadata Lang', description: 'Metadata tags specify language.', level: 'M', scoring: ratio('# metadata tags with lang tag', '# metadata tags', -1) },
-          { name: 'Data Lang', description: 'Data triples specify language.', level: 'D', scoring: cases(['0', 'if at least a lang is specified'], ['−1', 'otherwise']) },
-          { name: 'Labels', description: 'Ratio of resources with human-readable labels.', level: 'D', scoring: ratio('# of resources with a rdfs:label', '# of triples', -1) },
-          { name: 'Examples', description: 'Examples of access point usage provided, as exemplary SPARQL queries.', level: 'M', scoring: cases(['1', 'present'], ['0', 'otherwise']) },
-          { name: 'Description readability', description: 'Degree to which the dataset description uses clear, plain language to ensure broad accessibility and comprehension. Computed via Flesh Reading Easy score (FR).', level: 'M', scoring: cases(['1', 'FR > 100'], ['−1', 'FR < −1'], ['FR / 50 − 1', 'otherwise']) },
+          dimension('Metadata Lang', 'Metadata specify language tags.', ratio('# metadata tags with lang tag', '# metadata tags')),
+          dimension('Data Lang', 'Data triples specify language tags.', cases(['1', 'lang tag at data level ≥ 1'], ['0', 'otherwise'])),
+          dimension('Labels', 'Ratio of resources with human-readable labels.', ratio('# resources with a rdfs:label', '# resources')),
+          dimension('Examples', 'Examples of access point usage provided, as exemplary SPARQL queries.', cases(['1', 'present'], ['0', 'otherwise'])),
+          dimension('Description readability', 'Degree to which the dataset description uses clear, plain language to ensure broad accessibility and comprehension. Computed via normalised LIX index.', { kind: 'readability' }),
         ],
       },
       {
         name: 'Operable',
         rows: [
-          { name: 'Contact person', description: 'Maintainer or responsible party is explicitly reported.', level: 'M', scoring: cases(['1', 'present'], ['0', 'otherwise']) },
-          { name: 'Dump size', description: 'Dump available in compressed, validated format.', level: 'M', scoring: cases(['1', 'Data dump size < 500MB'], ['0', 'Data dump size in [500MB, 4GB]'], ['−1', 'Data dump size > 4GB']) },
-          { name: 'Auth', description: 'Endpoint access requires credentials (discouraged).', level: 'M', scoring: cases(['0', 'free access to the SPARQL endpoint'], ['−1', 'otherwise']) },
-          { name: 'Dump format', description: 'Dataset dump uses valid RDF serialization (Turtle, JSON-LD, RDF/XML).', level: 'M', scoring: cases(['0', 'dump in a valid serialization format'], ['−1', 'otherwise']) },
-          { name: 'Open License', description: 'The use of an open license, expressed as a URL, to ensure free (re)use.', level: 'M', scoring: cases(['1', 'open license'], ['0', 'missing license'], ['−1', 'non-open license']) },
-          { name: 'Alternative access points', description: 'Dataset accessible via multiple access points (SPARQL endpoint, dump, API).', level: 'M', scoring: cases(['1', '2+ access points'], ['0', 'otherwise']) },
+          dimension('Contact person', 'Maintainer or responsible party is explicitly reported.', cases(['1', 'name and email are present'], ['0', 'otherwise'])),
+          dimension('Dump size', 'Dump available in compressed, validated format.', cases(['1', 'Data dump size < 500MB'], ['0.5', 'Data dump size in [500MB, 4GB]'], ['0', 'otherwise'])),
+          dimension('Auth', 'Endpoint access requires credentials (discouraged).', cases(['1', 'free access to the SPARQL endpoint'], ['0', 'otherwise'])),
+          dimension('Dump format', 'Dataset dump uses valid RDF serialization (Turtle, JSON-LD, RDF/XML).', cases(['1', 'dump in a valid serialization format'], ['0.5', 'a dump is provided, but not in a valid format'], ['0', 'otherwise'])),
+          dimension('Open License', 'The use of an open license, expressed as a URL, to ensure free (re)use.', cases(['1', 'clearly identifiable and open license'], ['0.5', 'clearly identifiable, but not an open license'], ['0', 'missing license'])),
+          dimension('Access points', 'Dataset accessible via multiple access points (SPARQL endpoint, dump, API).', cases(['1', '≥ 2 access points'], ['0', 'otherwise'])),
         ],
       },
       {
         name: 'Robust',
         rows: [
-          { name: 'Versioning', description: 'Explicit dataset versioning to track changes.', level: 'M', scoring: cases(['0', 'standard versioning'], ['−1', 'otherwise']) },
-          { name: 'robots_txt', description: 'Presence of robots.txt reference in metadata.', level: 'M', scoring: cases(['1', 'present'], ['0', 'otherwise']) },
-          { name: 'Webpage broken link', description: 'Guarantees that the dataset’s webpage is provided and accessible (i.e., not a broken link).', level: 'M', scoring: cases(['0', 'URL webpage returns [200, 399] as a status code'], ['−1', 'otherwise']) },
-          { name: 'Broken metadata link rate', description: 'The proportion of dataset metadata links that fail to resolve.', level: 'M', scoring: ratio('# broken metadata links', '# metadata links', -1) },
-          { name: 'Canonical ID', description: 'Unique persistent ID (e.g., DOI) provided.', level: 'M', scoring: cases(['1', 'present'], ['0', 'otherwise']) },
+          dimension('Versioning', 'Explicit dataset versioning to track changes.', cases(['1', 'the version can be identified'], ['0', 'otherwise'])),
+          dimension('Webpage broken link', 'Guarantees that the dataset’s webpage is provided and accessible (i.e., not a broken link).', cases(['1', 'URL webpage returns [200] or [300, 399] as a status code'], ['0', 'otherwise'])),
+          dimension('Broken metadata link rate', 'The proportion of metadata links that fail to resolve.', ratio('# working metadata links', '# metadata links')),
+          dimension('Canonical ID', 'Unique persistent ID (e.g., DOI) provided.', cases(['1', 'present'], ['0', 'otherwise'])),
         ],
       },
     ],
@@ -54,25 +60,25 @@ export const accessibilityTables = [
   {
     id: 'table-2',
     title: 'Accessibility for Special Need groups',
-    caption: 'Accessibility for Special Need groups parameters.',
+    caption: 'Accessibility dimensions for users with special needs, their computational methods, and required media.',
     groups: [
       {
-        name: 'Accessibility for Visually Impaired',
+        name: 'Accessibility for Blind or Visually Impaired Users',
         rows: [
-          { name: 'Alt', description: 'Ratio of images with descriptive alt-text.', level: 'D', scoring: ratio('# images with alt-text', '# images', -1), requirement: 'Image' },
-          { name: 'Audio description', description: 'Presence of entities with audio description.', level: 'D', scoring: ratio('# entities with audio description', '# entities', -1), requirement: 'Audio' },
+          dimension('Alt', 'Ratio of images with descriptive alt-text.', ratio('# images with alt-text', '# images', true)),
+          dimension('Audio description', 'Presence of resources with audio description.', ratio('# resources with audio description', '# resources')),
         ],
       },
       {
         name: 'Accessibility for Deaf or Hard-of-hearing Users',
         rows: [
-          { name: 'Video description', description: 'Presence of entities with audio representation.', level: 'D', scoring: cases(['0', 'at least a video description exists'], ['−1', 'otherwise']), requirement: 'Video' },
-          { name: 'signLang_video', description: 'Sign language video.', level: 'D', scoring: ratio('# video with interpretation', '# video', -1), requirement: 'Video' },
-          { name: 'signLang_audio', description: 'Sign language audio.', level: 'D', scoring: ratio('# audio with interpretation', '# audio', -1), requirement: 'Audio' },
-          { name: 'captions_video', description: 'Ratio of videos with synchronized captions.', level: 'D', scoring: ratio('# video with captions', '# video', -1), requirement: 'Video' },
-          { name: 'captions_audio', description: 'Ratio of audio with synchronized captions.', level: 'D', scoring: ratio('# audio with captions', '# audio', -1), requirement: 'Audio' },
-          { name: 'transcript_video', description: 'Ratio of videos with text transcript.', level: 'D', scoring: ratio('# videos with transcript', '# video', -1), requirement: 'Video' },
-          { name: 'transcript_audio', description: 'Ratio of audio with text transcript.', level: 'D', scoring: ratio('# audio with transcript', '# audio', -1), requirement: 'Audio' },
+          dimension('Video description', 'Presence of resources with audio representation.', ratio('# resources with video description', '# resources')),
+          dimension('signLang_video', 'Sign language video.', ratio('# video with interpretation', '# video', true)),
+          dimension('signLang_audio', 'Sign language audio.', ratio('# audio with interpretation', '# audio', true)),
+          dimension('captions_video', 'Ratio of videos with synchronized captions.', ratio('# video with captions', '# video', true)),
+          dimension('captions_audio', 'Ratio of audio with synchronized captions.', ratio('# audio with captions', '# audio', true)),
+          dimension('transcript_video', 'Ratio of videos with text transcript.', ratio('# video with transcript', '# video', true)),
+          dimension('transcript_audio', 'Ratio of audio with text transcript.', ratio('# audio with transcript', '# audio', true)),
         ],
       },
     ],

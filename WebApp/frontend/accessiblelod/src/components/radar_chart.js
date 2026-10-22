@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import Chart from "react-apexcharts";
 
 const RadarChart = ({ title, categories, seriesData, height = 350 }) => {
@@ -20,21 +20,20 @@ const RadarChart = ({ title, categories, seriesData, height = 350 }) => {
           }
         },
         yaxis:{
-            min: -1,
+            min: 0,
             max: 1,
             tickAmount: 4,
             labels: {
               formatter: function(val) {
-                if (val === 0) return 'Neutral (0)';
-                return val.toFixed(1);
+                return val.toFixed(2);
               }
             }
         },
         plotOptions: {
           radar: {
             polygons: {
-              strokeColors: ['#e8e8e8', '#e8e8e8', '#333333', '#e8e8e8', '#e8e8e8'],
-              strokeWidth: [1, 1, 2, 1, 1],
+              strokeColors: '#e8e8e8',
+              strokeWidth: 1,
               connectorColors: '#e8e8e8',
             }
           }

@@ -41,9 +41,27 @@ const keyMapping = {
 };
 
 
+// Read scores once per cloud request so regenerated CSV values are reflected immediately.
+function getAccessibilityScores() {
+    return new Promise((resolve, reject) => {
+        const scores = new Map();
+        const input = fs.createReadStream(path.join(__dirname, '../../data/accessibleLOD_scores.csv'));
+        const parser = csv();
+        input.on('error', reject);
+        parser.on('error', reject);
+        parser.on('data', row => {
+            const value = row.overall_score_with_special;
+            const score = value == null || value.trim() === '' ? NaN : Number(value);
+            scores.set(row.KG, Number.isFinite(score) ? score : null);
+        });
+        parser.on('end', () => resolve(scores));
+        input.pipe(parser);
+    });
+}
+
 router.get('/all_ch_links', async (req, res) => {
     try {
-        const items = await getAllIdsAndLinks();
+        const [items, scores] = await Promise.all([getAllIdsAndLinks(), getAccessibilityScores()]);
         const allowedKeywords = ["ch-tangible", "ch-intangible",'ch-natural','ch-generic'];
         if (!items.length) {
             return res.status(404).json({ message: "No elements founded." });
@@ -79,6 +97,7 @@ router.get('/all_ch_links', async (req, res) => {
             }
             return {
                 "id": item.identifier,
+                "overall_score_with_special": scores.get(item.identifier) ?? null,
                 "title" : item.title,
                 "url": `${frontendUrl}/#/${fairness_page}?dataset_id=${item.identifier}`,
                 "category": matchedKeyword != '' ? matchedKeyword : 'No domain',
