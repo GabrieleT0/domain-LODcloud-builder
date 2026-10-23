@@ -29,9 +29,9 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "prestart": "node scripts/sync-cloud-scores.mjs && node --experimental-default-type=module scripts/sync-cloud-layout.mjs",
+    "prestart": "node scripts/sync-cloud-scores.mjs && node scripts/sync-cloud-fallback.mjs && node --experimental-default-type=module scripts/sync-cloud-layout.mjs",
     "start": "react-scripts start",
-    "prebuild": "node scripts/sync-cloud-scores.mjs && node --experimental-default-type=module scripts/sync-cloud-layout.mjs",
+    "prebuild": "node scripts/sync-cloud-scores.mjs && node scripts/sync-cloud-fallback.mjs && node --experimental-default-type=module scripts/sync-cloud-layout.mjs",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "test:graph": "node --experimental-default-type=module --test src/components/graphLayout.test.mjs src/components/graphLabels.test.mjs src/components/useGraphLayout.test.mjs",

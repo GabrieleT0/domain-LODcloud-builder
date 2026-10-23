@@ -5,6 +5,23 @@ import { useNavigate } from 'react-router-dom';
 import Footer from '../components/footer';
 import Navbar from '../components/navbar';
 import { Link } from 'react-router-dom';
+import accessibilityScores from '../data/accessibility_scores.json';
+
+const searchPackagedCsv = (query, selectedFields, page, limit = 10) => {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const matches = Object.entries(accessibilityScores)
+    .filter(([, row]) => !normalizedQuery || selectedFields.some(field => {
+      const value = field === 'identifier' ? row.KG_ID || row.KG : row[field];
+      return value != null && String(value).toLocaleLowerCase().includes(normalizedQuery);
+    }))
+    .map(([identifier, row]) => ({ identifier, title: row.title || identifier }));
+  const totalPages = Math.ceil(matches.length / limit);
+  return {
+    results: matches.slice((page - 1) * limit, page * limit),
+    totalPages,
+    page,
+  };
+};
 
 function Search() {
   const [name, setName] = useState('');
@@ -30,6 +47,13 @@ function Search() {
     } else {
       queryFields = selectedFieldArray.join(',');
     }
+    const localFields = queryFields.split(',');
+    const localResults = searchPackagedCsv(nameQuery, localFields, pageQuery);
+    setResults(localResults.results);
+    setTotalPages(localResults.totalPages);
+    setPage(localResults.page);
+    setHasSearched(true);
+
     try {
       const res = await axios.get(`${base_url}/AccessibleLOD_data/search`, {
         params: {
@@ -39,12 +63,14 @@ function Search() {
           limit: 10
         }
       });
-      setResults(res.data.results);
-      setTotalPages(res.data.totalPages);
-      setPage(res.data.page);
-      setHasSearched(true);
+      if (res.data.results?.length) {
+        setResults(res.data.results);
+        setTotalPages(res.data.totalPages);
+        setPage(res.data.page);
+      }
     } catch (err) {
-      console.error("Search error:", err);
+      // The packaged CSV results are already visible while the backend is
+      // unavailable or taking too long to respond.
     }
   };
 

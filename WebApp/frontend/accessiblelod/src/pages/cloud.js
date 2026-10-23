@@ -3,10 +3,11 @@ import { base_url } from '../api';
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/navbar';
 import cloudScores from '../data/cloud_scores.json';
+import cloudFallback from '../data/cloud_fallback.json';
 
 function Cloud(){
-    const [data, setData] = useState({ nodes: [], links: [] });
-    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState(cloudFallback);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -18,6 +19,9 @@ function Cloud(){
             })
             .then(data => {
                 if (!Array.isArray(data.nodes) || !Array.isArray(data.links)) throw new Error('Invalid graph data');
+                // A reachable API can still have an empty database. Keep the
+                // packaged snapshot visible unless the backend has real data.
+                if (data.nodes.length === 0) return;
                 setData({
                     ...data,
                     nodes: data.nodes.map(node => ({
@@ -31,7 +35,7 @@ function Cloud(){
             })
             .catch(error => {
                 if (error.name !== 'AbortError') {
-                    setError('Unable to load the cloud. Please refresh to try again.');
+                    setData(cloudFallback);
                     setLoading(false);
                 }
             });

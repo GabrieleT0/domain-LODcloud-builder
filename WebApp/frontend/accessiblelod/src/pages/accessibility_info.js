@@ -9,6 +9,7 @@ import Footer from '../components/footer';
 import Navbar from '../components/navbar';
 import { accessibilityTables } from '../data/accessibility_tables';
 import { getAccessibilityMetrics } from '../data/accessibility_metrics';
+import accessibilityScores from '../data/accessibility_scores.json';
 
 export const scoreNumber = value => {
     if (value == null || String(value).trim() === '') return null;
@@ -34,12 +35,20 @@ function FairnessInfo(){
     useEffect(() => {
         let active = true;
         const controller = new AbortController();
-        setFairnessData({});
-        setDatasetMetadata(null);
+        const localScores = dataset_id ? accessibilityScores[dataset_id] : null;
+        setFairnessData(localScores || {});
+        setDatasetMetadata(localScores ? {
+            identifier: dataset_id,
+            title: localScores.title || dataset_id,
+            domain: localScores.domain || '',
+            keywords: [],
+        } : null);
         setScoresError(null);
         setMetadataError(null);
-        setScoresLoading(true);
-        setMetadataLoading(true);
+        // Render the packaged CSV data immediately; backend requests can
+        // replace it with richer, current data when they finish.
+        setScoresLoading(!localScores);
+        setMetadataLoading(!localScores);
         setShowDownloads(false);
         if (!dataset_id) {
             setScoresError('No dataset selected. Open a dataset from the cloud or search page.');
@@ -54,7 +63,14 @@ function FairnessInfo(){
                 if (!response.data || typeof response.data !== 'object' || Array.isArray(response.data)) throw new Error('Invalid dataset response');
                 if (active) setData(response.data);
             } catch (error) {
-                if (active) setError(message);
+                if (active && endpoint === 'accessibility_data' && accessibilityScores[dataset_id]) {
+                    setData(accessibilityScores[dataset_id]);
+                } else if (active && endpoint === 'dataset_metadata' && accessibilityScores[dataset_id]) {
+                    const row = accessibilityScores[dataset_id];
+                    setData({ identifier: dataset_id, title: row.title || dataset_id, domain: row.domain || '', keywords: [] });
+                } else if (active) {
+                    setError(message);
+                }
             } finally {
                 if (active) setLoading(false);
             }
@@ -105,6 +121,12 @@ function FairnessInfo(){
             const matchesCategory = categoryFilter === 'all' || metric.category === categoryFilter;
             return matchesSearch && matchesCategory;
         });
+    const hasDatasetInformation = Boolean(dataset_metadata && (
+        dataset_metadata.website || dataset_metadata.license ||
+        dataset_metadata.contact_point?.email || dataset_metadata.contact_point?.name ||
+        dataset_metadata.sparql?.length || dataset_metadata.other_download?.length ||
+        dataset_metadata.full_download?.length
+    ));
 
     const categories = ['all', ...accessibilityTables.flatMap(table => table.groups.map(group => group.name))];
 
@@ -135,7 +157,7 @@ function FairnessInfo(){
                 )}
 
             {metadataError && <p role="alert" className="text-center">{metadataError}</p>}
-            {dataset_metadata && (
+            {hasDatasetInformation && (
                 <div className="card shadow-sm p-4 mb-5">
                     <h5 className="mb-3">Dataset Information</h5>
                     <Row>
