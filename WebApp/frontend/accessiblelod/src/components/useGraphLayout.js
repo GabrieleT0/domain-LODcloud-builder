@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { createGraphLayout } from './graphLayout';
+import positions from '../data/cloud_positions.json';
 
 const emptyLayout = {
     nodes: [], links: [], width: 850, height: 250, connectedCount: 0, isolatedCount: 0,
@@ -16,7 +18,22 @@ export function requestLayout(data) {
     cancelActiveJob?.();
     cachedKey = key;
     const job = new Promise((resolve, reject) => {
-        const worker = new Worker(new URL('./graphLayout.worker.js', import.meta.url));
+        // Resolve split chunks from the worker URL, including on project Pages.
+        // The app's relative public path otherwise repeats static/js/ in workers.
+        let worker;
+        const fallback = () => {
+            try { resolve(createGraphLayout(data, positions)); }
+            catch (error) { reject(error); }
+        };
+        try {
+            worker = new Worker(
+                /* webpackEntryOptions: { publicPath: "auto" } */
+                new URL('./graphLayout.worker.js', import.meta.url),
+            );
+        } catch (error) {
+            fallback();
+            return;
+        }
         activeWorker = worker;
         const finish = () => {
             worker.terminate();
@@ -28,14 +45,15 @@ export function requestLayout(data) {
         };
         worker.onmessage = event => {
             finish();
-            if (event.data.error) reject(new Error(event.data.error));
+            if (event.data.error) fallback();
             else resolve(event.data.layout);
         };
         worker.onerror = () => {
             finish();
-            reject(new Error('Unable to prepare the cloud. Please refresh to try again.'));
+            fallback();
         };
-        worker.postMessage(data);
+        try { worker.postMessage(data); }
+        catch (error) { finish(); fallback(); }
     });
     cachedJob = job;
     job.catch(() => {
