@@ -26,6 +26,7 @@ All paths below are relative to the repository root.
 
 | Artifact | Location | What to inspect |
 | :--- | :--- | :--- |
+| Accessibility framework · expert evaluation | [`AccessibilityFramework - ExpertEvaluation.csv`](supplementary_material/AccessibilityFramework%20-%20ExpertEvaluation.csv) | Expert evaluation responses for the accessibility framework. |
 | Score table | [`HumanAccessibility_LODCloud_scores.csv`](supplementary_material/raw_kgheartbeat_results/HumanAccessibility_LODCloud_scores.csv) | A compact table of metric values and aggregate scores, with knowledge graph identifiers, titles, and domains. Start here for comparisons. |
 | Detailed results · JSON | [`HumanAccessibility_LODCloud_results.json`](supplementary_material/raw_kgheartbeat_results/HumanAccessibility_LODCloud_results.json) | Evaluation records indexed by knowledge graph identifier. This is the input used by the analysis notebook. |
 | Detailed results · CSV | [`HumanAccessibility_LODCloud_results.csv`](supplementary_material/raw_kgheartbeat_results/HumanAccessibility_LODCloud_results.csv) | A tabular export of the detailed results, including endpoint information and evaluation details. |
